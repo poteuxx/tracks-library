@@ -788,20 +788,47 @@
                 query: params.search || 'trending'
             });
             const res = await fetch(`${host}/v1/tracks/trending?${audQuery}`);
+            if (params.search) {
+                const searchRes = await fetch(`${host}/v1/tracks/search?${audQuery}`);
+                const searchData = await searchRes.json();
+                if (searchData.data.length > 0) return mapAudius(searchData.data, host);
+            }
             const data = await res.json();
-            
-            return data.data.map(t => ({
-                id: t.id,
-                name: t.title,
-                artist_name: t.user.name,
-                image: t.artwork ? t.artwork['150x150'] : 'https://picsum.photos/300/300?music',
-                audio: `${host}/v1/tracks/${t.id}/stream?app_name=TRACKS_LIB`,
-                duration: t.duration
-            }));
+            return mapAudius(data.data, host);
         } catch (e) {
-            console.error("All APIs failed", e);
-            return null;
+            console.warn("Audius failed, trying YouTube fallback...");
         }
+
+        // Final Fallback: YouTube/Invidious (Massive reach)
+        if (params.search) {
+            try {
+                const res = await fetch(`https://invidious.snopyta.org/api/v1/search?q=${params.search}&type=video`);
+                const data = await res.json();
+                return data.slice(0, 20).map(v => ({
+                    id: v.videoId,
+                    name: v.title,
+                    artist_name: v.author,
+                    image: v.videoThumbnails ? v.videoThumbnails[0].url : '',
+                    audio: `https://invidious.snopyta.org/latest/videoplayback?id=${v.videoId}&itag=140`, // Audios itag
+                    duration: v.lengthSeconds
+                }));
+            } catch (e) {
+                console.error("All search sources failed", e);
+                return null;
+            }
+        }
+        return null;
+    }
+
+    function mapAudius(data, host) {
+        return data.map(t => ({
+            id: t.id,
+            name: t.title,
+            artist_name: t.user.name,
+            image: t.artwork ? t.artwork['150x150'] : 'https://picsum.photos/300/300?music',
+            audio: `${host}/v1/tracks/${t.id}/stream?app_name=TRACKS_LIB`,
+            duration: t.duration
+        }));
     }
 
     async function fetchRadios(search = '') {
@@ -1069,11 +1096,25 @@
     els.search.onkeypress = (e) => { if(e.key === 'Enter') handleSearch(e.target.value); };
 
     async function handleSearch(q) {
-        els.sectionLabel.innerText = `Résultats pour "${q}"`;
+        if (!q) return;
+        els.sectionLabel.innerText = `Recherche de "${q}"...`;
         els.grid.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
-        const data = await fetchAPI('tracks', { search: q, order: 'relevance' });
-        state.tracks = data;
-        renderTracks(data, false);
+        
+        try {
+            const data = await fetchAPI('tracks', { search: q, order: 'relevance' });
+            
+            if (!data || data.length === 0) {
+                els.grid.innerHTML = `<p style="padding:40px; text-align:center;">Aucun résultat pour "${q}". Essayez un autre terme ou changez de source.</p>`;
+                return;
+            }
+
+            state.currentPlaylist = data;
+            els.sectionLabel.innerText = `Résultats pour "${q}"`;
+            renderTracks(data, false);
+            if (data.length > 0) updateHero(data[0]);
+        } catch (e) {
+            els.grid.innerHTML = '<p style="padding:40px; text-align:center;">Une erreur est survenue lors de la recherche.</p>';
+        }
     }
 
     // Modal
@@ -1102,41 +1143,53 @@
     }
 
     // --- VISUALIZER ---
+    let isVisualizerSetup = false;
     function startVisualizer() {
-        if (audioContext) { if(audioContext.state==='suspended') audioContext.resume(); return; }
-        audioContext = new (window.AudioContext || window.webkitAudioContext)();
-        analyser = audioContext.createAnalyser();
-        source = audioContext.createMediaElementSource(els.audio);
-        source.connect(analyser); analyser.connect(audioContext.destination);
-        analyser.fftSize = 256;
-        dataArray = new Uint8Array(analyser.frequencyBinCount);
-        
-        const canvas = document.getElementById('visualizerCanvas');
-        const ctx = canvas.getContext('2d');
-        const resize = () => { canvas.width = window.innerWidth; canvas.height = 80; };
-        window.addEventListener('resize', resize);
-        resize();
-
-        function draw() {
-            requestAnimationFrame(draw);
-            analyser.getByteFrequencyData(dataArray);
-            ctx.clearRect(0,0,canvas.width, canvas.height);
-            const bw = (canvas.width/dataArray.length) * 2;
-            let x = 0;
-            for(let i=0; i<dataArray.length; i++) {
-                const bh = (dataArray[i]/255)*canvas.height;
-                ctx.fillStyle = `rgba(29, 185, 84, ${dataArray[i]/255})`;
-                ctx.fillRect(x, canvas.height-bh, bw, bh);
-                x += bw + 1;
-            }
+        if (isVisualizerSetup) {
+            if (audioContext && audioContext.state === 'suspended') audioContext.resume();
+            return;
         }
-        draw();
+
+        try {
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            analyser = audioContext.createAnalyser();
+            source = audioContext.createMediaElementSource(els.audio);
+            source.connect(analyser); 
+            analyser.connect(audioContext.destination);
+            analyser.fftSize = 256;
+            dataArray = new Uint8Array(analyser.frequencyBinCount);
+            
+            const canvas = document.getElementById('visualizerCanvas');
+            const ctx = canvas.getContext('2d');
+            const resize = () => { canvas.width = window.innerWidth; canvas.height = 80; };
+            window.addEventListener('resize', resize);
+            resize();
+
+            function draw() {
+                requestAnimationFrame(draw);
+                analyser.getByteFrequencyData(dataArray);
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                const bw = (canvas.width/dataArray.length) * 2;
+                let x = 0;
+                for(let i=0; i<dataArray.length; i++) {
+                    const bh = (dataArray[i]/255)*canvas.height;
+                    ctx.fillStyle = `rgba(29, 185, 84, ${dataArray[i]/255})`;
+                    ctx.fillRect(x, canvas.height-bh, bw, bh);
+                    x += bw + 1;
+                }
+            }
+            draw();
+            isVisualizerSetup = true;
+        } catch (e) {
+            console.error("Visualizer setup failed:", e);
+        }
     }
 
     // Init
     setView('home');
     renderUserPlaylists();
     updateUserStats();
+    els.audio.volume = 0.8; // Set default volume
 
 </script>
 </body>
