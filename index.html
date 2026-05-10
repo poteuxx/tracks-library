@@ -1015,21 +1015,31 @@
             }
 
             // Try Jamendo first
-            const jamQuery = new URLSearchParams({
-                client_id: JAMENDO_KEYS[currentKeyIndex],
-                format: 'json',
-                limit: 50,
-                offset: state.offset,
-                ...params
-            });
+            // Try Jamendo with automatic key rotation
+            for (let attempts = 0; attempts < JAMENDO_KEYS.length; attempts++) {
+                const jamQuery = new URLSearchParams({
+                    client_id: JAMENDO_KEYS[currentKeyIndex],
+                    format: 'json',
+                    limit: 50,
+                    offset: state.offset,
+                    ...params
+                });
 
-            try {
-                const res = await fetch(`${JAMENDO_BASE}/${endpoint}/?${jamQuery}`);
-                const data = await res.json();
-                if (data.results && data.results.length > 0) return data.results;
-            } catch (err) {
-                console.warn("Jamendo failed, trying Audius...");
+                try {
+                    const res = await fetch(`${JAMENDO_BASE}/${endpoint}/?${jamQuery}`);
+                    if (!res.ok) {
+                        if (res.status === 429 || res.status === 403) throw new Error("Rate limit or Invalid Key");
+                        break; // Other errors might not be key-related
+                    }
+                    const data = await res.json();
+                    if (data.results && data.results.length > 0) return data.results;
+                    break; // No results, don't keep rotating for nothing
+                } catch (err) {
+                    console.warn(`Jamendo key ${JAMENDO_KEYS[currentKeyIndex]} failed, rotating...`);
+                    currentKeyIndex = (currentKeyIndex + 1) % JAMENDO_KEYS.length;
+                }
             }
+            console.warn("Jamendo exhausted or failed, trying Audius...");
 
             // Fallback to Audius
             try {
@@ -1281,6 +1291,7 @@
             updateLikeBtn();
             addToHistory(track);
             updateUserStats();
+            updateMediaSession();
 
             const colors = ['#1DB954', '#1e90ff', '#ff4757', '#e84393', '#f9ca24', '#6c5ce7'];
             document.documentElement.style.setProperty('--accent', colors[Math.floor(Math.random() * colors.length)]);
@@ -1289,17 +1300,55 @@
         // --- KEYBOARD SHORTCUTS ---
         document.addEventListener('keydown', (e) => {
             if (e.target.tagName === 'INPUT') return;
+            
             switch (e.code) {
-                case 'Space': e.preventDefault(); document.getElementById('playBtn').click(); break;
-                case 'ArrowRight': nextTrack(); break;
-                case 'ArrowLeft': prevTrack(); break;
+                case 'Space': 
+                    e.preventDefault(); 
+                    document.getElementById('playBtn').click(); 
+                    break;
+                case 'ArrowRight': 
+                    if (e.ctrlKey) nextTrack(); 
+                    else els.audio.currentTime += 5; 
+                    break;
+                case 'ArrowLeft': 
+                    if (e.ctrlKey) prevTrack(); 
+                    else els.audio.currentTime -= 5; 
+                    break;
+                case 'ArrowUp':
+                    e.preventDefault();
+                    els.audio.volume = Math.min(1, els.audio.volume + 0.1);
+                    updateVolumeUI();
+                    break;
+                case 'ArrowDown':
+                    e.preventDefault();
+                    els.audio.volume = Math.max(0, els.audio.volume - 0.1);
+                    updateVolumeUI();
+                    break;
+                case 'KeyN': 
+                case 'MediaTrackNext':
+                    nextTrack(); 
+                    break;
+                case 'KeyP': 
+                case 'MediaTrackPrevious':
+                    prevTrack(); 
+                    break;
                 case 'KeyM':
                     els.audio.muted = !els.audio.muted;
                     window.showToast(els.audio.muted ? "Muet" : "Son activé");
                     break;
-                case 'KeyL': toggleLikeById(state.currentTrack?.id); break;
+                case 'KeyL': 
+                    if (e.ctrlKey) toggleLikeById(state.currentTrack?.id); 
+                    break;
+                case 'KeyF':
+                    document.getElementById('fullscreenBtn').click();
+                    break;
             }
         });
+
+        function updateVolumeUI() {
+            els.volumeFill.style.width = `${els.audio.volume * 100}%`;
+            localStorage.setItem('userVolume', els.audio.volume);
+        }
 
         els.audio.onerror = () => {
             console.error("Audio error catch-all");
@@ -1372,8 +1421,18 @@
         }
 
         // --- PLAYER EVENTS ---
-        els.audio.onplay = () => { state.isPlaying = true; updatePlayIcon(); startVisualizer(); };
-        els.audio.onpause = () => { state.isPlaying = false; updatePlayIcon(); document.title = "Solutions Technologie - En pause"; };
+        els.audio.onplay = () => { 
+            state.isPlaying = true; 
+            updatePlayIcon(); 
+            startVisualizer(); 
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'playing';
+        };
+        els.audio.onpause = () => { 
+            state.isPlaying = false; 
+            updatePlayIcon(); 
+            document.title = "Solutions Technologie - En pause"; 
+            if ('mediaSession' in navigator) navigator.mediaSession.playbackState = 'paused';
+        };
         els.audio.onended = () => { if (state.isRepeat) els.audio.play(); else nextTrack(); };
         els.audio.onwaiting = () => { document.getElementById('currentTrackArtist').innerText = "🌐 Mise en mémoire..."; };
         els.audio.onplaying = () => { if(state.currentTrack) document.getElementById('currentTrackArtist').innerText = state.currentTrack.artist_name; };
@@ -1407,6 +1466,47 @@
             const idx = state.currentPlaylist.findIndex(t => t.id === state.currentTrack?.id);
             const prev = state.currentPlaylist[(idx - 1 + state.currentPlaylist.length) % state.currentPlaylist.length];
             if (prev) playTrack(prev.id);
+        }
+
+        function updateMediaSession() {
+            if ('mediaSession' in navigator && state.currentTrack) {
+                navigator.mediaSession.metadata = new MediaMetadata({
+                    title: state.currentTrack.name,
+                    artist: state.currentTrack.artist_name,
+                    album: 'Tracks Library',
+                    artwork: [
+                        { src: state.currentTrack.image || 'https://picsum.photos/300/300?music', sizes: '96x96', type: 'image/jpeg' },
+                        { src: state.currentTrack.image || 'https://picsum.photos/300/300?music', sizes: '128x128', type: 'image/jpeg' },
+                        { src: state.currentTrack.image || 'https://picsum.photos/300/300?music', sizes: '192x192', type: 'image/jpeg' },
+                        { src: state.currentTrack.image || 'https://picsum.photos/300/300?music', sizes: '256x256', type: 'image/jpeg' },
+                        { src: state.currentTrack.image || 'https://picsum.photos/300/300?music', sizes: '384x384', type: 'image/jpeg' },
+                        { src: state.currentTrack.image || 'https://picsum.photos/300/300?music', sizes: '512x512', type: 'image/jpeg' },
+                    ]
+                });
+
+                navigator.mediaSession.setActionHandler('play', () => els.audio.play());
+                navigator.mediaSession.setActionHandler('pause', () => els.audio.pause());
+                navigator.mediaSession.setActionHandler('stop', () => { els.audio.pause(); els.audio.currentTime = 0; });
+                navigator.mediaSession.setActionHandler('previoustrack', () => prevTrack());
+                navigator.mediaSession.setActionHandler('nexttrack', () => nextTrack());
+                navigator.mediaSession.setActionHandler('seekbackward', (details) => { 
+                    const skipTime = details.seekOffset || 10;
+                    els.audio.currentTime = Math.max(0, els.audio.currentTime - skipTime); 
+                });
+                navigator.mediaSession.setActionHandler('seekforward', (details) => { 
+                    const skipTime = details.seekOffset || 10;
+                    els.audio.currentTime = Math.min(els.audio.duration, els.audio.currentTime + skipTime); 
+                });
+                try {
+                    navigator.mediaSession.setActionHandler('seekto', (details) => {
+                        if (details.fastSeek && 'fastSeek' in els.audio) {
+                            els.audio.fastSeek(details.seekTime);
+                            return;
+                        }
+                        els.audio.currentTime = details.seekTime;
+                    });
+                } catch (error) { console.log('Seekto not supported'); }
+            }
         }
 
         function updateHero(track) {
@@ -1461,12 +1561,7 @@
         });
 
         document.getElementById('nextBtn').onclick = nextTrack;
-        document.getElementById('prevBtn').onclick = () => {
-            if (state.currentPlaylist.length === 0) return;
-            const idx = state.currentPlaylist.findIndex(t => t.id === state.currentTrack?.id);
-            const prev = state.currentPlaylist[(idx - 1 + state.currentPlaylist.length) % state.currentPlaylist.length];
-            if (prev) playTrack(prev.id);
-        };
+        document.getElementById('prevBtn').onclick = prevTrack;
 
         document.getElementById('shuffleBtn').onclick = () => {
             state.isShuffle = !state.isShuffle;
@@ -1601,26 +1696,42 @@
                 source = audioContext.createMediaElementSource(els.audio);
                 source.connect(analyser);
                 analyser.connect(audioContext.destination);
-                analyser.fftSize = 256;
+                analyser.fftSize = 512;
                 dataArray = new Uint8Array(analyser.frequencyBinCount);
 
                 const canvas = document.getElementById('visualizerCanvas');
                 const ctx = canvas.getContext('2d');
-                const resize = () => { canvas.width = window.innerWidth; canvas.height = 80; };
+                const resize = () => { 
+                    canvas.width = window.innerWidth; 
+                    canvas.height = 100; 
+                };
                 window.addEventListener('resize', resize);
                 resize();
 
                 function draw() {
+                    if (!state.isPlaying) {
+                        requestAnimationFrame(draw);
+                        return;
+                    }
                     requestAnimationFrame(draw);
                     analyser.getByteFrequencyData(dataArray);
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    const bw = (canvas.width / dataArray.length) * 2;
+                    
+                    const barWidth = (canvas.width / dataArray.length) * 2.5;
                     let x = 0;
+
+                    const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                    gradient.addColorStop(0, 'rgba(29, 185, 84, 0.8)');
+                    gradient.addColorStop(1, 'rgba(29, 185, 84, 0)');
+
                     for (let i = 0; i < dataArray.length; i++) {
-                        const bh = (dataArray[i] / 255) * canvas.height;
-                        ctx.fillStyle = `rgba(29, 185, 84, ${dataArray[i] / 255})`;
-                        ctx.fillRect(x, canvas.height - bh, bw, bh);
-                        x += bw + 1;
+                        const barHeight = (dataArray[i] / 255) * canvas.height;
+                        
+                        ctx.fillStyle = gradient;
+                        // Center mirroring effect
+                        ctx.fillRect(x, canvas.height - barHeight, barWidth, barHeight);
+                        
+                        x += barWidth + 1;
                     }
                 }
                 draw();
