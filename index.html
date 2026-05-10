@@ -1208,6 +1208,7 @@
     function addToHistory(track) {
         state.history = [track, ...state.history.filter(t => t.id !== track.id)].slice(0, 50);
         localStorage.setItem('playHistory', JSON.stringify(state.history));
+        if (state.currentView === 'library') renderTracks(state.history, false);
     }
 
     function formatTime(s) {
@@ -1319,6 +1320,10 @@
     };
 
     // --- UI EVENTS ---
+    els.likeBtn.onclick = () => {
+        if (state.currentTrack) toggleLikeById(state.currentTrack.id);
+    };
+
     document.getElementById('playBtn').onclick = () => {
         if (!state.currentTrack && state.currentPlaylist.length > 0) playTrack(state.currentPlaylist[0].id);
         else if (state.isPlaying) els.audio.pause();
@@ -1386,18 +1391,36 @@
         localStorage.setItem('userPlaylists', JSON.stringify(state.playlists));
         renderUserPlaylists();
         window.closeModal();
-    }
+        window.showToast(`Playlist "${name}" créée`);
+    };
+
+    window.deletePlaylist = (name) => {
+        if (confirm(`Voulez-vous supprimer la playlist "${name}" ?`)) {
+            state.playlists = state.playlists.filter(p => p.name !== name);
+            localStorage.setItem('userPlaylists', JSON.stringify(state.playlists));
+            renderUserPlaylists();
+            if (els.sectionLabel.innerText === name) setView('home');
+            window.showToast("Playlist supprimée");
+        }
+    };
 
     function renderUserPlaylists() {
         document.getElementById('userPlaylists').innerHTML = state.playlists.map(p => `
-            <div class="playlist-link" onclick="loadUserPlaylist('${p.name}')">${p.name}</div>
+            <div class="playlist-link-container" style="display:flex; justify-content:space-between; align-items:center;">
+                <div class="playlist-link" onclick="loadUserPlaylist('${p.name}')" style="flex:1;">${p.name}</div>
+                <button onclick="deletePlaylist('${p.name}')" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:5px;">
+                    <svg width="14" height="14" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                </button>
+            </div>
         `).join('');
     }
 
     function loadUserPlaylist(name) {
         const pl = state.playlists.find(p => p.name === name);
+        if(!pl) return;
         els.sectionLabel.innerText = name;
         renderTracks(pl.tracks, false);
+        state.currentPlaylist = pl.tracks; 
     }
 
     // --- VISUALIZER ---
