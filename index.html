@@ -701,7 +701,7 @@
     </div>
 </div>
 
-<audio id="audioPlayer"></audio>
+<audio id="audioPlayer" crossorigin="anonymous"></audio>
 
 <script>
     // --- APP CORE ---
@@ -745,6 +745,15 @@
     };
 
     let audioContext, analyser, dataArray, source;
+
+    // --- AUDIO UNLOCKER ---
+    function unlockAudio() {
+        if (audioContext && audioContext.state === 'suspended') {
+            audioContext.resume();
+        }
+    }
+    document.body.addEventListener('click', unlockAudio, { once: true });
+    document.body.addEventListener('touchstart', unlockAudio, { once: true });
 
     // --- API HANDLERS ---
     async function getAudiusHost() {
