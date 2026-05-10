@@ -572,6 +572,10 @@
                 <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 13.5a2.5 2.5 0 100-5 2.5 2.5 0 000 5z"/><path d="M19 4H5c-1.11 0-2 .89-2 2v12c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.11-.9-2-2-2zm0 14H5V6h14v12z"/></svg>
                 Bibliothèque
             </div>
+            <div class="nav-item" id="navRadios">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8-8-8 8 3.59 8 8-3.59 8-8 8zm-5-9h10v2H7z"/></svg>
+                Radios Mondiales
+            </div>
         </nav>
 
         <div style="margin-top: 20px;">
@@ -701,10 +705,12 @@
 
 <script>
     // --- APP CORE ---
-    const CLIENT_IDS = ['709fa152', '56d30cce', '874d6f3a'];
+    const JAMENDO_KEYS = ['709fa152', '56d30cce', '874d6f3a'];
     let currentKeyIndex = 0;
-    const API_BASE = 'https://api.jamendo.com/v3.0';
-    
+    const JAMENDO_BASE = 'https://api.jamendo.com/v3.0';
+    const AUDIUS_BASE = 'https://api.audius.co'; 
+    const RADIO_API = 'https://de1.api.radio-browser.info/json';
+
     // State
     const state = {
         tracks: [],
@@ -718,7 +724,8 @@
         likedTracks: JSON.parse(localStorage.getItem('likedTracks') || '[]'),
         playlists: JSON.parse(localStorage.getItem('userPlaylists') || '[]'),
         history: JSON.parse(localStorage.getItem('playHistory') || '[]'),
-        currentView: 'home'
+        currentView: 'home',
+        sourceMode: 'tracks' // 'tracks' or 'radios'
     };
 
     // Elements
@@ -740,9 +747,24 @@
     let audioContext, analyser, dataArray, source;
 
     // --- API HANDLERS ---
+    async function getAudiusHost() {
+        try {
+            const res = await fetch('https://api.audius.co');
+            const data = await res.json();
+            return data.data[0]; 
+        } catch (e) {
+            return 'https://discoveryprovider.audius.co';
+        }
+    }
+
     async function fetchAPI(endpoint, params = {}) {
-        const query = new URLSearchParams({
-            client_id: CLIENT_IDS[currentKeyIndex],
+        if (state.sourceMode === 'radios') {
+            return fetchRadios(params.search);
+        }
+
+        // Try Jamendo first
+        const jamQuery = new URLSearchParams({
+            client_id: JAMENDO_KEYS[currentKeyIndex],
             format: 'json',
             limit: 50,
             offset: state.offset,
@@ -750,24 +772,55 @@
         });
         
         try {
-            const res = await fetch(`${API_BASE}/${endpoint}/?${query}`);
-            if (!res.ok) throw new Error(`HTTP Error ${res.status}`);
+            const res = await fetch(`${JAMENDO_BASE}/${endpoint}/?${jamQuery}`);
+            const data = await res.json();
+            if (data.results && data.results.length > 0) return data.results;
+        } catch (err) {
+            console.warn("Jamendo failed, trying Audius...");
+        }
+
+        // Fallback to Audius
+        try {
+            const host = await getAudiusHost();
+            const audQuery = new URLSearchParams({
+                limit: 50,
+                offset: state.offset,
+                query: params.search || 'trending'
+            });
+            const res = await fetch(`${host}/v1/tracks/trending?${audQuery}`);
             const data = await res.json();
             
-            if (data.headers.status === 'failed' && currentKeyIndex < CLIENT_IDS.length - 1) {
-                console.warn("API Key failed, trying fallback...");
-                currentKeyIndex++;
-                return fetchAPI(endpoint, params);
-            }
-            
-            return data.results;
-        } catch (err) {
-            console.error("Fetch API Error:", err);
-            if (currentKeyIndex < CLIENT_IDS.length - 1) {
-                currentKeyIndex++;
-                return fetchAPI(endpoint, params);
-            }
+            return data.data.map(t => ({
+                id: t.id,
+                name: t.title,
+                artist_name: t.user.name,
+                image: t.artwork ? t.artwork['150x150'] : 'https://picsum.photos/300/300?music',
+                audio: `${host}/v1/tracks/${t.id}/stream?app_name=TRACKS_LIB`,
+                duration: t.duration
+            }));
+        } catch (e) {
+            console.error("All APIs failed", e);
             return null;
+        }
+    }
+
+    async function fetchRadios(search = '') {
+        const query = search ? `/stations/byname/${search}` : '/stations/topclick/50';
+        try {
+            const res = await fetch(`${RADIO_API}${query}`);
+            const data = await res.json();
+            return data.map(r => ({
+                id: r.stationuuid,
+                name: r.name,
+                artist_name: r.tags || r.country,
+                image: r.favicon || 'https://picsum.photos/300/300?radio',
+                audio: r.url_resolved || r.url,
+                duration: 0,
+                isLive: true
+            }));
+        } catch (e) {
+            console.error("Radio API failed", e);
+            return [];
         }
     }
 
@@ -786,8 +839,14 @@
         document.querySelectorAll('.nav-item').forEach(v => v.classList.remove('active'));
         
         if (view === 'home') {
+            state.sourceMode = 'tracks';
             document.getElementById('navHome').classList.add('active');
             els.sectionLabel.innerText = "Sons du moment";
+            loadCatalog();
+        } else if (view === 'radios') {
+            state.sourceMode = 'radios';
+            document.getElementById('navRadios').classList.add('active');
+            els.sectionLabel.innerText = "Radios Mondiales (Live)";
             loadCatalog();
         } else if (view === 'liked') {
             document.getElementById('navLiked').classList.add('active');
@@ -809,17 +868,17 @@
             const data = await fetchAPI('tracks', { order: state.category, audioformat: 'mp32' });
             
             if (!data) {
-                if (!append) els.grid.innerHTML = '<p style="padding:40px; text-align:center;">Erreur de connexion. Veuillez réessayer ou vérifier votre client_id.</p>';
+                if (!append) els.grid.innerHTML = '<p style="padding:40px; text-align:center;">Erreur de connexion.</p>';
                 return;
             }
 
-            state.tracks = append ? [...state.tracks, ...data] : data;
+            if (append) state.currentPlaylist = [...state.currentPlaylist, ...data];
+            else state.currentPlaylist = data;
+
             renderTracks(data, append);
             if (data.length > 0) updateHero(data[0]);
-            else if (!append) els.grid.innerHTML = '<p style="padding:40px; text-align:center;">Aucune piste disponible pour le moment.</p>';
             
         } catch (e) {
-            console.error(e);
             els.grid.innerHTML = '<p style="padding:40px; text-align:center;">Erreur système.</p>';
         }
     }
@@ -834,7 +893,7 @@
                     </div>
                 </div>
                 <div class="track-title">${t.name}</div>
-                <div class="track-artist">${t.artist_name}</div>
+                <div class="track-artist">${t.artist_name} ${t.isLive ? '<span class="badge" style="background:#ff4757; color:#fff;">LIVE</span>' : ''}</div>
                 <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
                    <span class="badge">Hi-Fi</span>
                    <button class="control-btn" onclick="event.stopPropagation(); toggleLikeById('${t.id}')" style="padding: 5px;">
@@ -846,8 +905,7 @@
         
         if (append) els.grid.insertAdjacentHTML('beforeend', html);
         else els.grid.innerHTML = html;
-        els.gridFooter.style.display = state.currentView === 'home' ? 'block' : 'none';
-        state.currentPlaylist = append ? [...state.currentPlaylist, ...data] : data;
+        els.gridFooter.style.display = (state.currentView === 'home' || state.currentView === 'radios') ? 'block' : 'none';
     }
 
     function playTrack(id) {
@@ -859,14 +917,13 @@
         els.audio.play();
 
         document.getElementById('currentTrackTitle').innerText = track.name;
-        document.getElementById('currentTrackArtist').innerText = track.artist_name;
+        document.getElementById('currentTrackArtist').innerText = track.artist_name || (track.isLive ? "Live Radio" : "");
         document.getElementById('currentTrackImg').src = track.image || 'https://picsum.photos/100/100?music';
         
         updateLikeBtn();
         addToHistory(track);
         updateUserStats();
         
-        // Dynamic Accent
         const colors = ['#1DB954', '#1e90ff', '#ff4757', '#e84393', '#f9ca24', '#6c5ce7'];
         document.documentElement.style.setProperty('--accent', colors[Math.floor(Math.random()*colors.length)]);
     }
@@ -886,7 +943,6 @@
         localStorage.setItem('likedTracks', JSON.stringify(state.likedTracks));
         if (state.currentView === 'liked') renderTracks(state.likedTracks, false);
         else {
-            // Update individual cards without full refresh
             document.querySelectorAll(`.track-card`).forEach(card => {
                 if (card.getAttribute('onclick').includes(id)) {
                     const heart = card.querySelector('.control-btn svg');
@@ -913,7 +969,7 @@
     }
 
     function formatTime(s) {
-        if (isNaN(s)) return "0:00";
+        if (isNaN(s) || s === Infinity) return "LIVE";
         const min = Math.floor(s/60);
         const sec = Math.floor(s%60);
         return `${min}:${sec < 10 ? '0' : ''}${sec}`;
@@ -924,6 +980,12 @@
     els.audio.onpause = () => { state.isPlaying = false; updatePlayIcon(); };
     els.audio.onended = () => { if (state.isRepeat) els.audio.play(); else nextTrack(); };
     els.audio.ontimeupdate = () => {
+        if (state.currentTrack && state.currentTrack.isLive) {
+            els.progressFill.style.width = `100%`;
+            els.currentTime.innerText = "LIVE";
+            els.totalTime.innerText = "EN DIRECT";
+            return;
+        }
         const p = (els.audio.currentTime / els.audio.duration) * 100;
         els.progressFill.style.width = `${p}%`;
         els.currentTime.innerText = formatTime(els.audio.currentTime);
@@ -943,13 +1005,15 @@
 
     function updateHero(track) {
         if (!track) return;
+        document.getElementById('heroBadge').innerText = track.isLive ? "RADIO LIVE" : "SÉLECTION DU MOMENT";
         document.getElementById('heroTitle').innerText = track.name;
-        document.getElementById('heroDesc').innerText = `Découvrez l'univers de ${track.artist_name}.`;
+        document.getElementById('heroDesc').innerText = track.isLive ? `Écoute en direct des meilleures stations mondiales.` : `Découvrez l'univers de ${track.artist_name}.`;
         if (track.image) document.getElementById('heroImg').src = track.image;
     }
 
     // --- PLAYER CONTROLS ---
     function seek(e) {
+        if (state.currentTrack && state.currentTrack.isLive) return;
         const rect = document.getElementById('progressBarBg').getBoundingClientRect();
         const pos = (e.clientX - rect.left) / rect.width;
         els.audio.currentTime = pos * els.audio.duration;
@@ -967,8 +1031,9 @@
 
     document.getElementById('nextBtn').onclick = nextTrack;
     document.getElementById('prevBtn').onclick = () => {
-        const idx = state.tracks.findIndex(t => t.id === state.currentTrack?.id);
-        const prev = state.tracks[(idx - 1 + state.tracks.length) % state.tracks.length];
+        if (state.currentPlaylist.length === 0) return;
+        const idx = state.currentPlaylist.findIndex(t => t.id === state.currentTrack?.id);
+        const prev = state.currentPlaylist[(idx - 1 + state.currentPlaylist.length) % state.currentPlaylist.length];
         if (prev) playTrack(prev.id);
     };
 
@@ -989,13 +1054,14 @@
 
     // --- UI EVENTS ---
     document.getElementById('playBtn').onclick = () => {
-        if (!state.currentTrack && state.tracks.length > 0) playTrack(state.tracks[0].id);
+        if (!state.currentTrack && state.currentPlaylist.length > 0) playTrack(state.currentPlaylist[0].id);
         else if (state.isPlaying) els.audio.pause();
         else els.audio.play();
     };
 
     document.getElementById('loadMoreBtn').onclick = () => { state.offset += 50; loadCatalog(true); };
     document.getElementById('navHome').onclick = () => setView('home');
+    document.getElementById('navRadios').onclick = () => setView('radios');
     document.getElementById('navLiked').onclick = () => setView('liked');
     document.getElementById('navLibrary').onclick = () => setView('library');
     document.getElementById('navSearch').onclick = () => { els.search.focus(); window.scrollTo(0,0); };
