@@ -467,6 +467,37 @@
             animation: cardEntrance 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
+        /* --- CATEGORY BAR --- */
+        .category-bar {
+            display: flex;
+            gap: 12px;
+            padding: 10px 32px;
+            overflow-x: auto;
+            scrollbar-width: none;
+            position: sticky;
+            top: 70px;
+            background: linear-gradient(to bottom, rgba(9,9,9,1), rgba(9,9,9,0.8));
+            z-index: 90;
+        }
+
+        .category-btn {
+            background: #242424;
+            border: 1px solid rgba(255,255,255,0.05);
+            color: #fff;
+            padding: 8px 20px;
+            border-radius: 500px;
+            font-size: 13px;
+            font-weight: 600;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        .category-btn:hover, .category-btn.active {
+            background: var(--accent);
+            color: #000;
+        }
+
         /* --- NOTIFICATIONS --- */
         #notification-container {
             position: fixed;
@@ -687,6 +718,18 @@
             </div>
         </header>
 
+        <div class="category-bar" id="categoryBar">
+            <button class="category-btn active" data-tag="popularity_week">Général</button>
+            <button class="category-btn" data-tag="rock">Rock</button>
+            <button class="category-btn" data-tag="pop">Pop</button>
+            <button class="category-btn" data-tag="jazz">Jazz</button>
+            <button class="category-btn" data-tag="electronic">Électro</button>
+            <button class="category-btn" data-tag="hiphop">Hip-Hop</button>
+            <button class="category-btn" data-tag="classical">Classique</button>
+            <button class="category-btn" data-tag="ambient">Ambiant</button>
+            <button class="category-btn" data-tag="metal">Metal</button>
+        </div>
+
         <section class="hero" id="heroSection">
             <img src="https://images.unsplash.com/photo-1493225255756-d9584f8606e9?auto=format&fit=crop&w=600&q=80" class="hero-img" id="heroImg">
             <div class="hero-content">
@@ -763,6 +806,9 @@
         </div>
 
         <div style="display: flex; justify-content: flex-end; gap: 15px; color: var(--text-muted); align-items: center;">
+            <button class="control-btn" id="downloadBtn" title="Télécharger">
+                <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+            </button>
             <svg width="18" height="18" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/></svg>
             <div class="progress-bar-bg" style="width: 100px; cursor: pointer;" id="volumeBar">
                 <div class="progress-bar-fill" id="volumeFill" style="width: 80%;"></div>
@@ -1225,6 +1271,29 @@
     }
     document.getElementById('volumeBar').onclick = setVolume;
 
+    document.getElementById('downloadBtn').onclick = () => {
+        if (!state.currentTrack) return;
+        window.showToast("Préparation du téléchargement...");
+        const a = document.createElement('a');
+        a.href = state.currentTrack.audio;
+        a.download = `${state.currentTrack.name} - ${state.currentTrack.artist_name}.mp3`;
+        a.target = '_blank';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    };
+
+    document.querySelectorAll('.category-btn').forEach(btn => {
+        btn.onclick = () => {
+            document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            state.category = btn.dataset.tag;
+            state.offset = 0;
+            if (state.currentView !== 'home') setView('home', true);
+            else loadCatalog(false, state.category.includes('popularity') ? {} : { tags: state.category });
+        };
+    });
+
     document.getElementById('nextBtn').onclick = nextTrack;
     document.getElementById('prevBtn').onclick = () => {
         if (state.currentPlaylist.length === 0) return;
@@ -1255,13 +1324,32 @@
         else els.audio.play();
     };
 
-    document.getElementById('loadMoreBtn').onclick = () => { state.offset += 50; loadCatalog(true); };
+    document.getElementById('loadMoreBtn').onclick = () => { 
+        state.offset += 50; 
+        loadCatalog(true, state.category.includes('popularity') ? {} : { tags: state.category }); 
+    };
     document.getElementById('navHome').onclick = () => setView('home');
     document.getElementById('navRadios').onclick = () => setView('radios');
     document.getElementById('navLiked').onclick = () => setView('liked');
     document.getElementById('navLibrary').onclick = () => setView('library');
     document.getElementById('navSearch').onclick = () => { els.search.focus(); window.scrollTo(0,0); };
     document.getElementById('mainHomeLink').onclick = () => setView('home');
+
+    // Wrap loadCatalog to handle tags
+    const baseLoad = loadCatalog;
+    window.loadCatalog = async (append = false, extra = {}) => {
+        try {
+            if (!append) els.grid.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
+            const data = await fetchAPI('tracks', { 
+                order: state.category.includes('popularity') ? state.category : 'popularity_total',
+                ...extra 
+            });
+            if (!data) return;
+            state.currentPlaylist = append ? [...state.currentPlaylist, ...data] : data;
+            renderTracks(data, append);
+            if (data.length > 0 && !append) updateHero(data[0]);
+        } catch (e) { console.error(e); }
+    };
     els.search.onkeypress = (e) => { if(e.key === 'Enter') handleSearch(e.target.value); };
 
     async function handleSearch(q) {
