@@ -1333,8 +1333,25 @@
         }
 
         function updateUserStats() {
-            document.getElementById('userName').innerText = `Poteuxx Member (${state.likedTracks.length} Likes)`;
+            const platform = navigator.platform.toLowerCase();
+            let osGuess = "Device";
+            if (platform.includes("win")) osGuess = "Windows";
+            else if (platform.includes("mac")) osGuess = "Mac";
+            else if (platform.includes("linux")) osGuess = "Linux";
+            
+            const stationName = localStorage.getItem('stationName') || `Solutions-${osGuess}-Station`;
+            document.getElementById('userName').innerText = `${stationName} (${state.likedTracks.length} Likes)`;
         }
+
+        document.getElementById('userName').onclick = () => {
+            const cur = localStorage.getItem('stationName') || "Solutions-Station";
+            const name = prompt("Nommer votre station / appareil :", cur);
+            if (name) {
+                localStorage.setItem('stationName', name);
+                updateUserStats();
+                window.showToast(`Station renommée : ${name}`);
+            }
+        };
 
         function updateLikeBtn() {
             if (!state.currentTrack) return;
@@ -1617,7 +1634,15 @@
         setView('home');
         renderUserPlaylists();
         updateUserStats();
-        els.audio.volume = 0.8; // Set default volume
+        
+        // Restore Volume
+        const savedVol = localStorage.getItem('userVolume');
+        if (savedVol !== null) {
+            els.audio.volume = savedVol;
+            els.volumeFill.style.width = `${savedVol * 100}%`;
+        } else {
+            els.audio.volume = 0.8;
+        }
 
     </script>
 </body>
