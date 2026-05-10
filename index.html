@@ -467,7 +467,86 @@
             animation: cardEntrance 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         }
 
-        /* --- MODAL --- */
+        /* --- NOTIFICATIONS --- */
+        #notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .toast {
+            background: var(--bg-card);
+            border: 1px solid var(--accent);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            font-weight: 600;
+            font-size: 14px;
+            animation: slideInRight 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+
+        /* --- ACTION MENU --- */
+        .action-menu {
+            position: fixed;
+            background: #282828;
+            border-radius: 8px;
+            padding: 8px;
+            min-width: 200px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+            z-index: 10000;
+            display: none;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .menu-item {
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: 0.2s;
+        }
+
+        .menu-item:hover { background: rgba(255,255,255,0.1); }
+        .menu-item.danger { color: #ff4757; }
+
+        .btn-actions {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.6);
+            border: none;
+            color: #fff;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            opacity: 0;
+            transition: 0.3s;
+            z-index: 5;
+        }
+
+        .track-card:hover .btn-actions { opacity: 1; }
+
+        /* --- MODAL UPDATES --- */
         .modal-bg {
             position: fixed;
             inset: 0;
@@ -636,6 +715,12 @@
 
     <!-- Visualizer Canvas -->
     <canvas id="visualizerCanvas"></canvas>
+
+    <!-- Notifications -->
+    <div id="notification-container"></div>
+
+    <!-- Action Menu -->
+    <div id="actionMenu" class="action-menu"></div>
 
     <!-- Player Bar -->
     <footer class="player-bar">
@@ -922,8 +1007,11 @@
     function renderTracks(data, append) {
         const html = data.map((t, i) => `
             <div class="track-card entrance" style="animation-delay: ${i * 0.05}s" onclick="playTrack('${t.id}')">
+                <button class="btn-actions" onclick="event.stopPropagation(); window.showMenu(event, '${t.id}')">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+                </button>
                 <div class="card-img-container">
-                    <img src="${t.image || 'https://picsum.photos/300/300?music'}" alt="${t.name}">
+                    <img src="${t.image || 'https://picsum.photos/300/300?music'}" alt="${t.name}" loading="lazy">
                     <div class="play-overlay">
                         <svg viewBox="0 0 24 24" width="24" height="24" fill="black"><path d="M8 5v14l11-7z"/></svg>
                     </div>
@@ -943,6 +1031,78 @@
         else els.grid.innerHTML = html;
         els.gridFooter.style.display = (state.currentView === 'home' || state.currentView === 'radios') ? 'block' : 'none';
     }
+
+    // --- SENIOR FEATURES ---
+    window.showToast = (msg) => {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = `<svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg> ${msg}`;
+        document.getElementById('notification-container').appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    };
+
+    window.showMenu = (e, trackId) => {
+        const menu = document.getElementById('actionMenu');
+        const track = [...state.currentPlaylist, ...state.likedTracks, ...state.history].find(t => t.id === trackId);
+        if (!track) return;
+
+        let content = `<div class="menu-item" onclick="toggleLikeById('${trackId}'); window.closeMenu()">
+            <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> 
+            ${isLiked(trackId) ? 'Retirer des favoris' : 'Ajouter aux favoris'}
+        </div>`;
+
+        // If in a specific user playlist view, show "Remove from this playlist"
+        const currentPl = state.playlists.find(p => p.name === els.sectionLabel.innerText);
+        if (currentPl) {
+            content += `<div class="menu-item danger" onclick="removeTrackFromPlaylist('${trackId}', '${currentPl.name}'); window.closeMenu()">
+                <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/></svg>
+                Retirer de la playlist
+            </div>`;
+        }
+
+        if (state.playlists.length > 0) {
+            content += `<div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 5px 0;"></div>`;
+            state.playlists.forEach(pl => {
+                if (currentPl && currentPl.name === pl.name) return;
+                content += `<div class="menu-item" onclick="addTrackToPlaylist('${trackId}', '${pl.name}'); window.closeMenu()">
+                    <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                    Ajouter à "${pl.name}"
+                </div>`;
+            });
+        }
+
+        menu.innerHTML = content;
+        menu.style.display = 'block';
+        menu.style.left = `${e.clientX + 10}px`;
+        menu.style.top = `${e.clientY}px`;
+    };
+
+    window.closeMenu = () => document.getElementById('actionMenu').style.display = 'none';
+    window.onclick = () => window.closeMenu();
+
+    window.addTrackToPlaylist = (trackId, plName) => {
+        const track = [...state.currentPlaylist, ...state.history, ...state.likedTracks].find(t => t.id === trackId);
+        const pl = state.playlists.find(p => p.name === plName);
+        if (track && pl) {
+            if (pl.tracks.some(t => t.id === trackId)) {
+                window.showToast("Déjà dans la playlist !");
+                return;
+            }
+            pl.tracks.push(track);
+            localStorage.setItem('userPlaylists', JSON.stringify(state.playlists));
+            window.showToast(`Ajouté à ${plName}`);
+        }
+    };
+
+    window.removeTrackFromPlaylist = (trackId, plName) => {
+        const pl = state.playlists.find(p => p.name === plName);
+        if (pl) {
+            pl.tracks = pl.tracks.filter(t => t.id !== trackId);
+            localStorage.setItem('userPlaylists', JSON.stringify(state.playlists));
+            window.showToast(`Retiré de ${plName}`);
+            renderTracks(pl.tracks, false); // Refresh view
+        }
+    };
 
     function playTrack(id) {
         const track = [...state.currentPlaylist, ...state.likedTracks, ...state.history].find(t => t.id === id);
