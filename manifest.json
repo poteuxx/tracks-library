@@ -1,0 +1,21 @@
+{
+  "name": "Tracks Library",
+  "short_name": "Tracks",
+  "description": "Premium Music Streaming Platform",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#1DB954",
+  "icons": [
+    {
+      "src": "https://ui-avatars.com/api/?name=T&background=1DB954&color=fff&size=192",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://ui-avatars.com/api/?name=T&background=1DB954&color=fff&size=512",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ]
+}
