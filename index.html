@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracks Library - Senior Edition v3.0.2</title>
+    <title>Tracks Library - Senior Edition v3.1.0</title>
     <meta name="description" content="Streaming musical premium, intelligent et sans publicité.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,313 +19,346 @@
             --glass: rgba(255, 255, 255, 0.03);
             --glass-border: rgba(255, 255, 255, 0.08);
             --sidebar-width: 240px;
-            --player-height: 90px;
+            --player-height: 100px;
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Outfit', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background-color: var(--bg-black); color: var(--text-main); overflow: hidden; user-select: none; height: 100vh; }
+        body { background-color: var(--bg-black); color: var(--text-main); overflow: hidden; height: 100vh; }
 
         .app-container {
             display: grid;
             grid-template-columns: var(--sidebar-width) 1fr;
             grid-template-rows: 1fr var(--player-height);
             height: 100vh;
-            width: 100vw;
-            background: radial-gradient(circle at 50% -20%, #1a1a1a 0%, #050505 100%);
         }
 
         /* --- SIDEBAR --- */
-        .sidebar { background-color: #000; padding: 20px; display: flex; flex-direction: column; gap: 20px; border-right: 1px solid var(--glass-border); z-index: 1000; overflow: hidden; }
-        .logo { margin-bottom: 10px; cursor: pointer; }
-        .logo span { display: block; color: var(--accent); letter-spacing: 1px; }
+        .sidebar { background: #000; padding: 24px; border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 24px; }
+        .logo { cursor: pointer; display: flex; flex-direction: column; }
+        .logo span:first-child { font-weight: 900; font-size: 22px; color: var(--accent); }
+        .logo span:last-child { font-size: 10px; opacity: 0.6; letter-spacing: 3px; color: var(--accent); }
 
-        .nav-item {
-            display: flex; align-items: center; gap: 14px; padding: 10px 16px; border-radius: 8px; color: var(--text-muted); cursor: pointer;
-            transition: var(--transition); font-weight: 600; font-size: 14px;
+        .nav-link { 
+            display: flex; align-items: center; gap: 16px; color: var(--text-muted); text-decoration: none; 
+            padding: 12px; border-radius: 8px; font-weight: 600; transition: 0.2s; cursor: pointer;
         }
-        .nav-item:hover, .nav-item.active { color: #fff; background: var(--glass); }
-        .nav-item svg { width: 20px; height: 20px; }
-
-        .sidebar-playlists { margin-top: 20px; border-top: 1px solid var(--glass-border); padding-top: 20px; flex-grow: 1; overflow-y: auto; scrollbar-width: none; }
-        .playlist-link { padding: 8px 16px; font-size: 13px; color: var(--text-muted); cursor: pointer; transition: 0.2s; border-radius: 6px; }
-        .playlist-link:hover { color: #fff; background: var(--glass); }
+        .nav-link:hover, .nav-link.active { color: #fff; background: var(--glass); }
+        .nav-link svg { width: 22px; height: 22px; }
 
         /* --- MAIN VIEW --- */
-        .main-view { overflow-y: auto; position: relative; scroll-behavior: smooth; padding-bottom: 20px; }
-        header {
-            padding: 15px 30px; display: flex; justify-content: space-between; align-items: center;
-            position: sticky; top: 0; z-index: 100; backdrop-filter: blur(20px);
-            background: rgba(5, 5, 5, 0.7); border-bottom: 1px solid var(--glass-border);
+        .main-view { background: radial-gradient(circle at top, #1a1a1a, #050505); overflow-y: auto; scroll-behavior: smooth; position: relative; }
+        header { 
+            padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; 
+            position: sticky; top: 0; z-index: 1000; background: rgba(5,5,5,0.7); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border);
         }
+        .search-wrap { position: relative; width: 350px; }
+        .search-wrap input { width: 100%; height: 40px; background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); border-radius: 20px; padding: 0 40px; color: #fff; outline: none; transition: 0.3s; }
+        .search-wrap input:focus { width: 450px; border-color: var(--accent); }
 
-        .search-bar {
-            width: 300px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border);
-            padding: 10px 40px; border-radius: 500px; color: #fff; outline: none; transition: var(--transition);
+        .hero { 
+            margin: 30px; border-radius: 20px; height: 350px; background-size: cover; background-position: center; position: relative;
+            display: flex; align-items: flex-end; padding: 40px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
-        .search-bar:focus { width: 400px; border-color: var(--accent); }
+        .hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); }
+        .hero-info { position: relative; z-index: 1; }
+        .hero-image { width: 200px; height: 200px; border-radius: 12px; box-shadow: 0 15px 30px rgba(0,0,0,0.5); margin-right: 30px; }
 
-        .hero {
-            margin: 20px 30px; padding: 40px; border-radius: 16px; min-height: 280px;
-            background-size: cover; background-position: center;
-            display: flex; align-items: flex-end; gap: 30px; transition: var(--transition); position: relative;
+        .grid-section { padding: 0 30px 40px; }
+        .grid-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .track-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 20px; }
+        .track-item { 
+            background: var(--glass); padding: 15px; border-radius: 15px; border: 1px solid var(--glass-border); cursor: pointer; transition: 0.3s;
         }
+        .track-item:hover { transform: translateY(-8px); background: rgba(255,255,255,0.08); }
+        .track-item img { width: 100%; aspect-ratio: 1; border-radius: 10px; margin-bottom: 12px; object-fit: cover; }
+        .track-item .title { font-weight: 700; font-size: 15px; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .track-item .artist { font-size: 12px; color: var(--text-muted); }
 
-        /* --- GRID --- */
-        .section-container { padding: 0 30px; margin-top: 20px; }
-        .music-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 20px; }
-        .track-card {
-            background: var(--glass); padding: 15px; border-radius: 12px; transition: var(--transition);
-            cursor: pointer; border: 1px solid var(--glass-border);
+        /* --- PLAYER PILL (CLEAN, NO SECOND BAR) --- */
+        .player-footer { 
+            grid-column: 1 / -1; background: #000; border-top: 1px solid var(--glass-border); 
+            display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; padding: 0 30px;
         }
-        .track-card:hover { transform: translateY(-5px); background: rgba(255,255,255,0.06); }
-        .track-card img { width: 100%; aspect-ratio: 1; border-radius: 8px; margin-bottom: 10px; object-fit: cover; }
-
-        /* --- PLAYER BAR --- */
-        .player-bar {
-            grid-column: 1 / -1; background: #000; border-top: 1px solid var(--glass-border);
-            display: grid; grid-template-columns: 300px 1fr 300px; align-items: center; padding: 0 20px; z-index: 2000;
-            height: var(--player-height);
-        }
-        .now-playing { display: flex; align-items: center; gap: 12px; overflow: hidden; }
-        .now-playing img { width: 50px; height: 50px; border-radius: 6px; }
+        .track-info { display: flex; align-items: center; gap: 15px; overflow: hidden; }
+        .track-info img { width: 60px; height: 60px; border-radius: 8px; }
         
-        .player-controls { display: flex; flex-direction: column; align-items: center; gap: 6px; }
-        .control-buttons { display: flex; align-items: center; gap: 20px; }
-        .btn-play-main {
-            background: #fff; color: #000; width: 32px; height: 32px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; border: none; cursor: pointer;
-        }
+        .controls-center { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+        .main-btns { display: flex; align-items: center; gap: 30px; }
+        .play-pause-btn { background: #fff; color: #000; width: 40px; height: 40px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+        
+        .progress-bar-wrap { width: 100%; max-width: 600px; display: flex; align-items: center; gap: 15px; font-size: 11px; color: var(--text-muted); }
+        .progress-track { flex-grow: 1; height: 6px; background: #333; border-radius: 3px; cursor: pointer; position: relative; overflow: hidden; }
+        .progress-fill { height: 100%; background: #fff; width: 0%; border-radius: 3px; pointer-events: none; }
+        .progress-track:hover .progress-fill { background: var(--accent); }
 
-        .progress-container { width: 100%; max-width: 500px; display: flex; align-items: center; gap: 10px; font-size: 10px; color: var(--text-muted); }
-        .progress-bar-bg { flex-grow: 1; height: 4px; background: #333; border-radius: 4px; cursor: pointer; position: relative; overflow: hidden; }
-        .progress-bar-fill { height: 100%; background: #fff; width: 0%; pointer-events: none; }
-        .progress-bar-bg:hover .progress-bar-fill { background: var(--accent); }
+        /* --- VISUALIZER INTEGRATED (SUBTLE) --- */
+        #audioVisualizer { position: absolute; bottom: 0; left: 0; width: 100%; height: 40px; pointer-events: none; opacity: 0.1; }
 
-        #visualizerCanvas { position: fixed; bottom: var(--player-height); left: 0; width: 100%; height: 20px; pointer-events: none; opacity: 0.15; z-index: 1500; }
+        .cat-pills { display: flex; gap: 10px; padding: 10px 30px; overflow-x: auto; scrollbar-width: none; }
+        .pill { background: var(--glass); border: 1px solid var(--glass-border); color: #fff; padding: 8px 18px; border-radius: 40px; font-size: 13px; font-weight: 600; cursor: pointer; }
+        .pill.active { background: var(--accent); color: #000; }
 
-        .category-bar { display: flex; gap: 8px; padding: 10px 30px; overflow-x: auto; scrollbar-width: none; }
-        .category-btn { background: var(--glass); border: 1px solid var(--glass-border); color: #fff; padding: 6px 14px; border-radius: 500px; font-size: 12px; cursor: pointer; }
-        .category-btn.active { background: var(--accent); color: #000; }
-
-        .toast { position: fixed; bottom: 100px; right: 20px; background: var(--accent); color: #000; padding: 8px 16px; border-radius: 4px; font-weight: 700; z-index: 10000; }
+        .toast-notif { position: fixed; bottom: 120px; right: 30px; background: var(--accent); color: #000; padding: 12px 24px; border-radius: 12px; font-weight: 800; animation: fadeUp 0.3s forwards; z-index: 9999; }
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 
 <body>
     <div class="app-container">
         <aside class="sidebar">
-            <div class="logo" onclick="setView('home')">
-                <span style="font-weight: 900; font-size: 20px;">SOLUTIONS</span>
-                <span style="font-weight: 400; font-size: 9px; opacity: 0.7;">TECHNOLOGIES</span>
+            <div class="logo" onclick="location.reload()">
+                <span>SOLUTIONS</span>
+                <span>TECHNOLOGIES</span>
             </div>
-            <nav id="navItems">
-                <div class="nav-item active" onclick="setView('home')"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Accueil</div>
-                <div class="nav-item" onclick="document.getElementById('userSearch').focus()"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg> Recherche</div>
-                <div class="nav-item" onclick="setView('liked')"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> Titres likés</div>
+            <nav>
+                <div class="nav-link active" onclick="goHome()">
+                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Accueil
+                </div>
+                <div class="nav-link" onclick="document.getElementById('searchInput').focus()">
+                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg> Recherche
+                </div>
+                <div class="nav-link" onclick="showLiked()">
+                    <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> Titres likés
+                </div>
             </nav>
-            <div class="sidebar-playlists">
-                <div id="userPlaylists"></div>
-            </div>
+            <div id="sidePlaylists" style="margin-top:20px; border-top:1px solid var(--glass-border); padding-top:20px;"></div>
         </aside>
 
-        <main class="main-view" id="mainView">
+        <main class="main-view" id="scrollArea">
+            <canvas id="audioVisualizer"></canvas>
             <header>
-                <input type="text" class="search-bar" id="userSearch" placeholder="Rechercher...">
-                <div style="display:flex; align-items:center; gap:8px;">
-                    <span style="font-size:11px; font-weight:600;">Utilisateur Premium</span>
-                    <img src="https://ui-avatars.com/api/?name=User&background=1DB954" style="width:28px; height:28px; border-radius:50%;">
+                <div class="search-wrap">
+                    <input type="text" id="searchInput" placeholder="Rechercher sur Tracks...">
+                </div>
+                <div style="display:flex; align-items:center; gap:12px;">
+                    <span style="font-size:12px; font-weight:800;">Utilisateur Premium</span>
+                    <img src="https://ui-avatars.com/api/?name=User&background=1DB954" style="width:36px; height:36px; border-radius:50%;">
                 </div>
             </header>
 
-            <div class="category-bar">
-                <button class="category-btn active">Hits 2026</button>
-                <button class="category-btn">Rock</button>
-                <button class="category-btn">Electro</button>
-                <button class="category-btn">Jazz</button>
+            <div class="cat-pills">
+                <button class="pill active">Hits 2026</button>
+                <button class="pill">Rock</button>
+                <button class="pill">Techno</button>
+                <button class="pill">Lofi</button>
             </div>
 
-            <section class="hero" id="heroSection">
-                <img src="" class="hero-img" id="heroImg">
-                <div class="hero-content">
-                    <span style="background:var(--accent); color:#000; padding:2px 8px; border-radius:4px; font-size:9px; font-weight:800;">SÉLECTION PREMIUM</span>
-                    <h1 id="heroTitle" style="font-size: 40px; margin: 5px 0;">Chargement...</h1>
-                    <p id="heroDesc" style="color: var(--text-muted); font-size: 13px;">Découvrez votre prochaine obsession musicale.</p>
+            <section class="hero" id="heroBox">
+                <div style="display:flex; align-items:center;">
+                    <img id="heroCover" src="" class="hero-image" style="display:none;">
+                    <div class="hero-info">
+                        <span style="background:var(--accent); color:#000; padding:5px 12px; border-radius:6px; font-size:11px; font-weight:900;">ROULETTE MUSICALE</span>
+                        <h1 id="heroT" style="font-size: 50px; margin: 15px 0; text-shadow: 0 5px 15px rgba(0,0,0,0.5);">Chargement...</h1>
+                        <p id="heroA" style="font-size: 18px; opacity: 0.8;"></p>
+                        <button onclick="playRandomHero()" style="margin-top:20px; background:var(--accent); border:none; padding:12px 30px; border-radius:30px; font-weight:800; cursor:pointer;">EN ÉCOUTE</button>
+                    </div>
                 </div>
             </section>
 
-            <div class="section-container">
-                <h2 id="sectionLabel" style="margin-bottom: 15px; font-size: 18px;">Découvertes</h2>
-                <div class="music-grid" id="mainGrid"></div>
+            <div class="grid-section">
+                <div class="grid-header">
+                    <h2 id="gridTitle">Populaires maintenant</h2>
+                </div>
+                <div class="track-grid" id="mainGrid"></div>
             </div>
         </main>
 
-        <canvas id="visualizerCanvas"></canvas>
-        <footer class="player-bar">
-            <div class="now-playing">
-                <img src="https://picsum.photos/60/60" id="currentTrackImg">
+        <footer class="player-footer">
+            <div class="track-info">
+                <img id="curImg" src="https://picsum.photos/100/100">
                 <div style="overflow:hidden;">
-                    <div id="currentTrackTitle" style="font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">En attente...</div>
-                    <div id="currentTrackArtist" style="color:var(--text-muted); font-size:11px;">Prêt à jouer</div>
+                    <div id="curTitle" style="font-weight:700; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Choisissez un titre</div>
+                    <div id="curArtist" style="color:var(--text-muted); font-size:12px;">Pret à jouer</div>
                 </div>
-                <button id="likeBtn" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:5px;"><svg width="18" height="18" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
+                <button id="likeBtn" style="background:none; border:none; color:#a7a7a7; cursor:pointer; padding:5px;"><svg width="22" height="22" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
             </div>
-            <div class="player-controls">
-                <div class="control-buttons">
-                    <button id="prevBtn" style="background:none; border:none; color:#fff; cursor:pointer;"><svg width="20" height="20" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
-                    <button class="btn-play-main" id="playBtn"><svg id="playIcon" width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-                    <button id="nextBtn" style="background:none; border:none; color:#fff; cursor:pointer;"><svg width="20" height="20" fill="currentColor"><path d="M6 18l8.5-6L6 6zm9-12h2v12h-2z"/></svg></button>
+
+            <div class="controls-center">
+                <div class="main-btns">
+                    <button id="prevBtn" style="background:none; border:none; color:#fff; cursor:pointer;"><svg width="28" height="28" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+                    <button class="play-pause-btn" id="playBtn"><svg id="playIcon" width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                    <button id="nextBtn" style="background:none; border:none; color:#fff; cursor:pointer;"><svg width="28" height="28" fill="currentColor"><path d="M6 18l8.5-6L6 6zm9-12h2v12h-2z"/></svg></button>
                 </div>
-                <div class="progress-container">
-                    <span id="currentTime">0:00</span>
-                    <div class="progress-bar-bg" id="progressBarBg"><div class="progress-bar-fill" id="progressBarFill"></div></div>
-                    <span id="totalTime">0:00</span>
+                <div class="progress-bar-wrap">
+                    <span id="curTime">0:00</span>
+                    <div class="progress-track" id="pTrack"><div class="progress-fill" id="pFill"></div></div>
+                    <span id="durTime">0:00</span>
                 </div>
             </div>
+
             <div style="display:flex; justify-content:flex-end;">
-                <div class="progress-bar-bg" style="width:80px;" id="volumeBar"><div class="progress-bar-fill" id="volumeFill" style="width:80%;"></div></div>
+                <div class="progress-track" style="width:100px;" id="vTrack"><div class="progress-fill" id="vFill" style="width:80%;"></div></div>
             </div>
         </footer>
     </div>
 
-    <audio id="audioPlayer" crossorigin="anonymous"></audio>
+    <audio id="playerCore" crossorigin="anonymous"></audio>
 
     <script>
-        const INVIDIOUS_INSTANCES = ['https://invidious.snopyta.org', 'https://yewtu.be', 'https://invidious.kavin.rocks'];
-        let currentInvIdx = 0;
+        const INSTANCES = ['https://invidious.snopyta.org', 'https://yewtu.be', 'https://invidious.kavin.rocks', 'https://inv.riverside.rocks', 'https://invidious.namazso.eu'];
+        let instIdx = 0;
         const state = {
-            currentPlaylist: [], currentTrack: null, isPlaying: false,
-            likedTracks: JSON.parse(localStorage.getItem('likedTracks') || '[]')
+            tracks: [], current: null, playing: false,
+            liked: JSON.parse(localStorage.getItem('likedTracks') || '[]')
         };
         const els = {
-            audio: document.getElementById('audioPlayer'), grid: document.getElementById('mainGrid'),
-            search: document.getElementById('userSearch'), playBtn: document.getElementById('playBtn'),
-            playIcon: document.getElementById('playIcon'), progressFill: document.getElementById('progressBarFill'),
-            currentTime: document.getElementById('currentTime'), totalTime: document.getElementById('totalTime'),
-            volumeFill: document.getElementById('volumeFill'), likeBtn: document.getElementById('likeBtn')
+            audio: document.getElementById('playerCore'), mainGrid: document.getElementById('mainGrid'),
+            playBtn: document.getElementById('playBtn'), playIcon: document.getElementById('playIcon'),
+            pFill: document.getElementById('pFill'), curTime: document.getElementById('curTime'),
+            durTime: document.getElementById('durTime'), likeBtn: document.getElementById('likeBtn'),
+            search: document.getElementById('searchInput')
         };
 
-        async function fetchMusic(q = 'top music 2026') {
-            const base = INVIDIOUS_INSTANCES[currentInvIdx];
+        async function fetchMusic(q = 'top hits 2026 audio') {
+            const base = INSTANCES[instIdx];
             try {
                 const res = await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video`);
+                if(!res.ok) throw new Error();
                 const data = await res.json();
                 return data.slice(0, 24).map(v => ({
-                    id: v.videoId, name: v.title.replace(/official audio|official video/gi, '').trim(),
-                    artist: v.author, img: v.videoThumbnails ? v.videoThumbnails[0].url : 'https://picsum.photos/400/400',
-                    url: `${base}/latest/videoplayback?id=${v.videoId}&itag=140`
+                    id: v.videoId, 
+                    title: v.title.replace(/official audio|official video|\[.*\]|\(.*\)/gi, '').trim(),
+                    artist: v.author, 
+                    img: v.videoThumbnails ? v.videoThumbnails[0].url : 'https://picsum.photos/400/400?music',
+                    audio: `${base}/latest/videoplayback?id=${v.videoId}&itag=140`
                 }));
-            } catch (e) { currentInvIdx = (currentInvIdx + 1) % INVIDIOUS_INSTANCES.length; return []; }
-        }
-
-        async function updateView(q) {
-            els.grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:40px;">Chargement...</p>';
-            const tracks = await fetchMusic(q);
-            if (tracks.length > 0) {
-                state.currentPlaylist = tracks;
-                renderTracks(tracks);
-                updateHero(tracks[Math.floor(Math.random() * tracks.length)]);
-            } else {
-                els.grid.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:40px;">Aucun résultat. Essayez une autre recherche.</p>';
+            } catch (e) { 
+                instIdx = (instIdx + 1) % INSTANCES.length; 
+                return []; 
             }
         }
 
-        function renderTracks(tracks) {
-            els.grid.innerHTML = tracks.map(t => `
-                <div class="track-card" onclick="playTrack('${t.id}')">
-                    <img src="${t.img}" loading="lazy">
-                    <div style="font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.name}</div>
-                    <div style="color:var(--text-muted); font-size:11px;">${t.artist}</div>
+        async function updateView(q) {
+            els.mainGrid.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:50px; font-weight:800;">RECHERCHE EN COURS...</p>';
+            const results = await fetchMusic(q);
+            if(results.length > 0) {
+                state.tracks = results;
+                renderTracks(results);
+                setupHero(results[Math.floor(Math.random() * results.length)]);
+            } else {
+                els.mainGrid.innerHTML = '<p style="grid-column:1/-1; text-align:center; padding:50px; color:var(--accent);">Erreur de connexion aux serveurs. Les serveurs sont surchargés, veuillez patienter ou réessayer.</p>';
+            }
+        }
+
+        function renderTracks(ts) {
+            els.mainGrid.innerHTML = ts.map(t => `
+                <div class="track-item" onclick="playSong('${t.id}')">
+                    <img src="${t.img}" onerror="this.src='https://picsum.photos/400/400?music'">
+                    <div class="title">${t.title}</div>
+                    <div class="artist">${t.artist}</div>
                 </div>
             `).join('');
         }
 
-        function playTrack(id) {
-            const track = state.currentPlaylist.find(t => t.id == id) || state.likedTracks.find(t => t.id == id);
-            if (!track) return;
-            state.currentTrack = track;
-            els.audio.src = track.url;
-            els.audio.play().catch(() => nextTrack());
-            document.getElementById('currentTrackTitle').innerText = track.name;
-            document.getElementById('currentTrackArtist').innerText = track.artist;
-            document.getElementById('currentTrackImg').src = track.img;
-            updateLikeUI();
-            startVisualizer();
+        function playSong(id) {
+            const track = state.tracks.find(t => t.id == id) || state.liked.find(t => t.id == id);
+            if(!track) return;
+            state.current = track;
+            els.audio.src = track.audio;
+            els.audio.play().catch(() => nextSong());
+            document.getElementById('curTitle').innerText = track.title;
+            document.getElementById('curArtist').innerText = track.artist;
+            document.getElementById('curImg').src = track.img;
+            updateLikeBtn();
+            startViz();
         }
 
-        function nextTrack() {
-            const idx = state.currentPlaylist.findIndex(t => t.id == state.currentTrack?.id);
-            const next = state.currentPlaylist[(idx + 1) % state.currentPlaylist.length];
-            if (next) playTrack(next.id);
+        function nextSong() {
+            const idx = state.tracks.findIndex(t => t.id == state.current?.id);
+            const next = state.tracks[(idx + 1) % state.tracks.length];
+            if(next) playSong(next.id);
         }
 
-        function updateHero(t) {
-            document.getElementById('heroTitle').innerText = t.name;
-            document.getElementById('heroDesc').innerText = `Par ${t.artist}`;
-            document.getElementById('heroImg').src = t.img;
-            document.getElementById('heroSection').style.backgroundImage = `linear-gradient(to right, rgba(0,0,0,0.8), transparent), url('${t.img}')`;
+        function setupHero(t) {
+            if(!t) return;
+            document.getElementById('heroT').innerText = t.title;
+            document.getElementById('heroA').innerText = `Proposé par ${t.artist}`;
+            document.getElementById('heroCover').src = t.img;
+            document.getElementById('heroCover').style.display = 'block';
+            document.getElementById('heroBox').style.backgroundImage = `linear-gradient(to top, rgba(0,0,0,0.9), transparent), url('${t.img}')`;
+            window.heroTrack = t;
         }
 
-        function updateLikeUI() {
-            const isLiked = state.likedTracks.some(t => t.id == state.currentTrack?.id);
+        window.playRandomHero = () => { if(window.heroTrack) playSong(window.heroTrack.id); };
+
+        function updateLikeBtn() {
+            const isLiked = state.liked.some(t => t.id == state.current?.id);
             els.likeBtn.style.color = isLiked ? '#ff4757' : '#a7a7a7';
         }
 
         els.likeBtn.onclick = () => {
-            if (!state.currentTrack) return;
-            const idx = state.likedTracks.findIndex(t => t.id == state.currentTrack.id);
-            if (idx > -1) state.likedTracks.splice(idx, 1);
-            else state.likedTracks.push(state.currentTrack);
-            localStorage.setItem('likedTracks', JSON.stringify(state.likedTracks));
-            updateLikeUI();
-            window.showToast(idx > -1 ? "Retiré des favoris" : "Ajouté aux favoris");
+            if(!state.current) return;
+            const idx = state.liked.findIndex(t => t.id == state.current.id);
+            if(idx > -1) state.liked.splice(idx, 1);
+            else state.liked.push(state.current);
+            localStorage.setItem('likedTracks', JSON.stringify(state.liked));
+            updateLikeBtn();
+            showToast(idx > -1 ? "Retiré" : "Coup de cœur !");
         };
 
-        els.playBtn.onclick = () => state.isPlaying ? els.audio.pause() : els.audio.play();
-        els.audio.onplay = () => { state.isPlaying = true; els.playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; };
-        els.audio.onpause = () => { state.isPlaying = false; els.playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; };
-        els.audio.onended = () => nextTrack();
+        els.playBtn.onclick = () => state.playing ? els.audio.pause() : els.audio.play();
+        els.audio.onplay = () => { state.playing = true; els.playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; };
+        els.audio.onpause = () => { state.playing = false; els.playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; };
+        els.audio.onended = () => nextSong();
         els.audio.ontimeupdate = () => {
             const p = (els.audio.currentTime / els.audio.duration) * 100 || 0;
-            els.progressFill.style.width = `${p}%`;
-            els.currentTime.innerText = formatTime(els.audio.currentTime);
-            els.totalTime.innerText = formatTime(els.audio.duration);
+            els.pFill.style.width = `${p}%`;
+            els.curTime.innerText = fmtTime(els.audio.currentTime);
+            els.durTime.innerText = fmtTime(els.audio.duration);
         };
 
-        function formatTime(s) { const m = Math.floor(s/60); const sec = Math.floor(s%60); return `${m}:${sec<10?'0':''}${sec}`; }
-        function setView(v) { 
-            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-            if(v === 'home') updateView();
-            else if(v === 'liked') { renderTracks(state.likedTracks); updateHero(state.likedTracks[0] || {name:'Favoris', artist:'Vos morceaux préférés', img:''}); }
+        function fmtTime(s) { 
+            if(isNaN(s)) return '0:00';
+            const m = Math.floor(s/60); 
+            const sec = Math.floor(s%60); 
+            return `${m}:${sec<10?'0':''}${sec}`; 
         }
 
-        document.querySelectorAll('.category-btn').forEach(btn => btn.onclick = () => updateView(btn.innerText));
-        els.search.onkeypress = (e) => e.key === 'Enter' && updateView(els.search.value);
-
-        let audioCtx, analyser, source;
-        function startVisualizer() {
-            if (audioCtx) return;
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            analyser = audioCtx.createAnalyser();
-            source = audioCtx.createMediaElementSource(els.audio);
-            source.connect(analyser); analyser.connect(audioCtx.destination);
-            const canvas = document.getElementById('visualizerCanvas');
-            const ctx = canvas.getContext('2d');
-            function draw() {
-                requestAnimationFrame(draw);
-                const data = new Uint8Array(analyser.frequencyBinCount);
-                analyser.getByteFrequencyData(data);
-                ctx.clearRect(0,0,canvas.width,canvas.height); ctx.fillStyle = '#1DB954';
-                const lw = canvas.width / (data.length / 2);
-                for(let i=0; i<data.length/2; i++) ctx.fillRect(i*lw, canvas.height - (data[i]/255 * canvas.height), lw-1, data[i]);
-            }
-            draw();
+        function showLiked() { 
+            document.getElementById('gridTitle').innerText = "Vos coups de cœur";
+            renderTracks(state.liked); 
+        }
+        function goHome() { 
+            document.getElementById('gridTitle').innerText = "Populaires maintenant";
+            updateView(); 
         }
 
-        window.showToast = (msg) => {
-            const t = document.createElement('div'); t.className = 'toast'; t.innerText = msg;
+        document.querySelectorAll('.pill').forEach(p => p.onclick = () => {
+            document.querySelectorAll('.pill').forEach(b => b.classList.remove('active'));
+            p.classList.add('active');
+            updateView(p.innerText + " music audio");
+        });
+        els.search.onkeypress = (e) => e.key === 'Enter' && updateView(els.search.value + " audio");
+
+        let aCtx, an, src;
+        function startViz() {
+            if(aCtx) return;
+            try {
+                aCtx = new (window.AudioContext || window.webkitAudioContext)();
+                an = aCtx.createAnalyser();
+                src = aCtx.createMediaElementSource(els.audio);
+                src.connect(an); an.connect(aCtx.destination);
+                const cvs = document.getElementById('audioVisualizer');
+                const ctx = cvs.getContext('2d');
+                function dr() {
+                    requestAnimationFrame(dr);
+                    const data = new Uint8Array(an.frequencyBinCount);
+                    an.getByteFrequencyData(data);
+                    ctx.clearRect(0,0,cvs.width,cvs.height);
+                    ctx.fillStyle = '#1DB954';
+                    const lw = cvs.width / 128;
+                    for(let i=0; i<128; i++) ctx.fillRect(i*lw, cvs.height - (data[i]/255 * cvs.height), lw-1, data[i]);
+                }
+                dr();
+            } catch(e){}
+        }
+
+        function showToast(m) {
+            const t = document.createElement('div'); t.className = 'toast-notif'; t.innerText = m;
             document.body.appendChild(t); setTimeout(() => t.remove(), 2500);
-        };
+        }
+
         updateView();
     </script>
 </body>
