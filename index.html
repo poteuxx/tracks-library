@@ -10,6 +10,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <link rel="manifest" href="manifest.json">
     <style>
         :root {
             --spotify-green: #1DB954;
@@ -743,7 +744,7 @@
             </header>
 
             <div class="category-bar" id="categoryBar">
-                <button class="category-btn active" data-tag="popularity_week">🚀 Spotify Hits</button>
+                <button class="category-btn active" data-tag="popularity">🚀 Spotify Hits</button>
                 <button class="category-btn" data-tag="rock">🎸 Rock</button>
                 <button class="category-btn" data-tag="pop">✨ Pop</button>
                 <button class="category-btn" data-tag="jazz">🎷 Jazz</button>
@@ -850,11 +851,16 @@
     <audio id="audioPlayer" crossorigin="anonymous"></audio>
 
     <script>
-        // --- CONFIG & STATE ---
-        const JAMENDO_KEYS = ['709fa152', '56d30cce', '874d6f3a'];
-        let currentKeyIndex = 0;
-        const JAMENDO_BASE = 'https://api.jamendo.com/v3.0';
+        // --- CONFIG & MULTI-SOURCE ---
+        const INVIDIOUS_INSTANCES = [
+            'https://invidious.snopyta.org',
+            'https://yewtu.be',
+            'https://invidious.kavin.rocks',
+            'https://inv.riverside.rocks'
+        ];
+        let currentInvIdx = 0;
         const RADIO_API = 'https://de1.api.radio-browser.info/json';
+        const AUDIUS_BASE = 'https://api.audius.co';
 
         const state = {
             currentPlaylist: [],
@@ -863,7 +869,7 @@
             isShuffle: false,
             isRepeat: false,
             offset: 0,
-            category: 'popularity_week',
+            category: 'popularity',
             likedTracks: JSON.parse(localStorage.getItem('likedTracks') || '[]'),
             playlists: JSON.parse(localStorage.getItem('userPlaylists') || '[]'),
             history: JSON.parse(localStorage.getItem('playHistory') || '[]'),
@@ -893,6 +899,35 @@
 
         let audioContext, analyser, dataArray, source;
 
+        // --- KEYBOARD SHORTCUTS ---
+        window.onkeydown = (e) => {
+            if (document.activeElement.tagName === 'INPUT') return;
+            switch(e.code) {
+                case 'Space': e.preventDefault(); els.playBtn.click(); break;
+                case 'ArrowRight': if(e.ctrlKey) nextTrack(); break;
+                case 'ArrowLeft': if(e.ctrlKey) prevTrack(); break;
+                case 'ArrowUp': e.preventDefault(); changeVolume(0.1); break;
+                case 'ArrowDown': e.preventDefault(); changeVolume(-0.1); break;
+                case 'KeyL': toggleLikeById(state.currentTrack?.id); break;
+                case 'KeyF': document.getElementById('fullscreenBtn').click(); break;
+            }
+        };
+
+        function changeVolume(delta) {
+            const nv = Math.max(0, Math.min(1, els.audio.volume + delta));
+            els.audio.volume = nv;
+            els.volumeFill.style.width = `${nv * 100}%`;
+            localStorage.setItem('userVolume', nv);
+            window.showToast(`Volume: ${Math.round(nv*100)}%`);
+        }
+
+        // --- SERVICE WORKER ---
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js').then(() => console.log('SW Registered')).catch(() => {});
+            });
+        }
+
         // --- MOBILE NAV ---
         els.mobileToggle.onclick = (e) => { e.stopPropagation(); els.sidebar.classList.toggle('open'); };
         document.body.onclick = () => els.sidebar.classList.remove('open');
@@ -901,39 +936,60 @@
         // --- API HANDLERS ---
         async function fetchAPI(endpoint, params = {}) {
             if (state.sourceMode === 'radios' || params.isRadio) return fetchRadios(params.search);
+            
             let results = [];
+            
+            // PRIORITY 1: Spotify Mode (Invidious Multi-instance)
             if (state.sourceMode === 'spotify' || params.search) {
-                const hq = await fetchHQ(params.search || 'top hits');
-                if (hq) results = [...hq.map(t => ({...t, source: 'Spotify HQ'}))];
+                const hq = await fetchHQWithFallback(params.search || 'top hits 2026');
+                if (hq && hq.length > 0) results = [...hq.map(t => ({...t, source: 'Spotify HQ'}))];
             }
-            const jam = await fetchJamendo(endpoint, params);
-            if (jam) results = [...results, ...jam.map(t => ({...t, source: 'Premium'}))];
+
+            // PRIORITY 2: Audius fallback (High Reliability)
+            if (results.length < 5) {
+                const aud = await fetchAudius(params.search);
+                if (aud) results = [...results, ...aud.map(t => ({...t, source: 'Premium'}))];
+            }
+
             const unique = results.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
             return applySorting(unique);
         }
 
-        async function fetchHQ(q) {
-            try {
-                const query = encodeURIComponent(q + ' official audio');
-                const res = await fetch(`https://invidious.snopyta.org/api/v1/search?q=${query}&type=video`);
-                const data = await res.json();
-                return data.slice(0, 15).map(v => ({
-                    id: v.videoId,
-                    name: v.title.replace(/official audio|official video/gi, '').trim(),
-                    artist_name: v.author,
-                    image: v.videoThumbnails ? v.videoThumbnails[0].url : 'https://picsum.photos/400/400',
-                    audio: `https://invidious.snopyta.org/latest/videoplayback?id=${v.videoId}&itag=140`,
-                    popularity: v.viewCount
-                }));
-            } catch (e) { return null; }
+        async function fetchHQWithFallback(q) {
+            for (let i = 0; i < INVIDIOUS_INSTANCES.length; i++) {
+                const base = INVIDIOUS_INSTANCES[currentInvIdx];
+                try {
+                    const query = encodeURIComponent(q + ' official audio');
+                    const res = await fetch(`${base}/api/v1/search?q=${query}&type=video`);
+                    if (!res.ok) throw new Error();
+                    const data = await res.json();
+                    return data.slice(0, 20).map(v => ({
+                        id: v.videoId,
+                        name: v.title.replace(/official audio|official video/gi, '').trim(),
+                        artist_name: v.author,
+                        image: v.videoThumbnails ? v.videoThumbnails[0].url : 'https://picsum.photos/400/400',
+                        audio: `${base}/latest/videoplayback?id=${v.videoId}&itag=140`,
+                        popularity: v.viewCount || 0
+                    }));
+                } catch (e) {
+                    currentInvIdx = (currentInvIdx + 1) % INVIDIOUS_INSTANCES.length;
+                }
+            }
+            return null;
         }
 
-        async function fetchJamendo(endpoint, params) {
-            const query = new URLSearchParams({ client_id: JAMENDO_KEYS[currentKeyIndex], format: 'json', limit: 30, offset: state.offset, ...params });
+        async function fetchAudius(q) {
             try {
-                const res = await fetch(`${JAMENDO_BASE}/${endpoint}/?${query}`);
+                const res = await fetch(`${AUDIUS_BASE}/v1/tracks/${q ? 'search?query=' + encodeURIComponent(q) : 'trending'}?app_name=TRACKS_LIB`);
                 const data = await res.json();
-                return data.results.map(t => ({ id: t.id, name: t.name, artist_name: t.artist_name, image: t.image, audio: t.audio, popularity: t.stats?.rate_total || 0 }));
+                return data.data.map(t => ({
+                    id: t.id,
+                    name: t.title,
+                    artist_name: t.user.name,
+                    image: t.artwork ? t.artwork['150x150'] : 'https://picsum.photos/300/300',
+                    audio: `${AUDIUS_BASE}/v1/tracks/${t.id}/stream?app_name=TRACKS_LIB`,
+                    popularity: t.play_count || 0
+                }));
             } catch (e) { return null; }
         }
 
@@ -947,9 +1003,10 @@
         }
 
         function applySorting(data) {
-            if (state.sortBy === 'name') data.sort((a,b) => a.name.localeCompare(b.name));
-            else if (state.sortBy === 'popularity') data.sort((a,b) => (b.popularity||0) - (a.popularity||0));
-            return data;
+            const sorted = [...data];
+            if (state.sortBy === 'name') sorted.sort((a,b) => a.name.localeCompare(b.name));
+            else if (state.sortBy === 'popularity') sorted.sort((a,b) => (b.popularity||0) - (a.popularity||0));
+            return sorted;
         }
 
         // --- UI RENDER ---
@@ -957,7 +1014,7 @@
             const html = data.map((t, i) => `
                 <div class="track-card entrance" onclick="playTrack('${t.id}')">
                     <div class="card-img-container">
-                        <img src="${t.image}" loading="lazy">
+                        <img src="${t.image}" loading="lazy" onerror="this.src='https://picsum.photos/300/300?music'">
                         <div class="play-overlay"><svg viewBox="0 0 24 24" width="20" height="20" fill="black"><path d="M8 5v14l11-7z"/></svg></div>
                     </div>
                     <div class="track-title">${t.name}</div>
@@ -971,16 +1028,23 @@
                 </div>
             `).join('');
             if (append) els.grid.insertAdjacentHTML('beforeend', html);
-            else els.grid.innerHTML = html || '<p style="text-align:center; padding: 40px;">Aucun résultat.</p>';
-            els.gridFooter.style.display = (state.currentView !== 'liked' && state.currentView !== 'library') ? 'block' : 'none';
+            else els.grid.innerHTML = html || '<p style="text-align:center; padding: 40px; grid-column: 1/-1;">Aucun morceau disponible. Veuillez vérifier votre connexion ou changer de source.</p>';
+            els.gridFooter.style.display = (state.currentView !== 'liked' && state.currentView !== 'library' && data.length > 0) ? 'block' : 'none';
         }
 
         async function loadCatalog(append = false) {
-            if (!append) els.grid.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
-            const data = await fetchAPI('tracks', { order: state.category });
-            state.currentPlaylist = append ? [...state.currentPlaylist, ...data] : data;
-            renderTracks(data, append);
-            if (data.length > 0 && !append) updateHero(data[0]);
+            try {
+                if (!append) {
+                    els.grid.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
+                    state.offset = 0;
+                }
+                const data = await fetchAPI('tracks');
+                state.currentPlaylist = append ? [...state.currentPlaylist, ...data] : data;
+                renderTracks(data, append);
+                if (data.length > 0 && !append) updateHero(data[0]);
+            } catch (e) {
+                els.grid.innerHTML = '<p style="text-align:center; padding: 40px; grid-column: 1/-1;">Erreur de chargement. Veuillez réessayer.</p>';
+            }
         }
 
         function playTrack(id) {
@@ -988,7 +1052,10 @@
             if (!track) return;
             state.currentTrack = track;
             els.audio.src = track.audio;
-            els.audio.play();
+            els.audio.play().catch(e => {
+                window.showToast("Erreur de flux. Tentative suivante...");
+                nextTrack();
+            });
             document.getElementById('currentTrackTitle').innerText = track.name;
             document.getElementById('currentTrackArtist').innerText = track.artist_name;
             document.getElementById('currentTrackImg').src = track.image;
@@ -1027,13 +1094,16 @@
         }
 
         els.sortSelect.onchange = (e) => { state.sortBy = e.target.value; renderTracks(applySorting([...state.currentPlaylist]), false); };
-        els.sourceFilter.onchange = (e) => { state.sourceMode = e.target.value; state.offset = 0; loadCatalog(); };
+        els.sourceFilter.onchange = (e) => { state.sourceMode = e.target.value; loadCatalog(); };
 
         document.querySelectorAll('.category-btn').forEach(btn => {
             btn.onclick = () => {
                 document.querySelectorAll('.category-btn').forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-                state.category = btn.dataset.tag; state.offset = 0; loadCatalog();
+                state.category = btn.dataset.tag; 
+                state.sourceMode = 'spotify';
+                els.sourceFilter.value = 'spotify';
+                handleSearch(btn.innerText.split(' ').pop());
             };
         });
 
@@ -1056,10 +1126,10 @@
             state.currentView = view;
             document.querySelectorAll('.nav-item').forEach(v => v.classList.remove('active'));
             els.sidebar.classList.remove('open');
-            if (view === 'home') { document.getElementById('navHome').classList.add('active'); els.sectionLabel.innerText = "Spotify Hits"; loadCatalog(); }
-            else if (view === 'radios') { document.getElementById('navRadios').classList.add('active'); els.sectionLabel.innerText = "Radios"; state.sourceMode = 'radios'; loadCatalog(); }
-            else if (view === 'liked') { document.getElementById('navLiked').classList.add('active'); els.sectionLabel.innerText = "Favoris"; renderTracks(state.likedTracks, false); }
-            else if (view === 'library') { document.getElementById('navLibrary').classList.add('active'); els.sectionLabel.innerText = "Historique"; renderTracks(state.history, false); }
+            if (view === 'home') { document.getElementById('navHome').classList.add('active'); els.sectionLabel.innerText = "Spotify Hits 2026"; loadCatalog(); }
+            else if (view === 'radios') { document.getElementById('navRadios').classList.add('active'); els.sectionLabel.innerText = "Radios Mondiales"; state.sourceMode = 'radios'; loadCatalog(); }
+            else if (view === 'liked') { document.getElementById('navLiked').classList.add('active'); els.sectionLabel.innerText = "Titres Favoris"; renderTracks(state.likedTracks, false); }
+            else if (view === 'library') { document.getElementById('navLibrary').classList.add('active'); els.sectionLabel.innerText = "Historique d'écoute"; renderTracks(state.history, false); }
         }
 
         document.getElementById('navHome').onclick = () => setView('home');
@@ -1068,12 +1138,29 @@
         document.getElementById('navLibrary').onclick = () => setView('library');
         document.getElementById('mainHomeLink').onclick = () => setView('home');
 
-        function updateHero(t) { document.getElementById('heroTitle').innerText = t.name; document.getElementById('heroDesc').innerText = `Artiste: ${t.artist_name}`; document.getElementById('heroImg').src = t.image; }
+        function updateHero(t) { document.getElementById('heroTitle').innerText = t.name; document.getElementById('heroDesc').innerText = `En vedette : ${t.artist_name}`; document.getElementById('heroImg').src = t.image; }
         function updateLikeBtn() { if(state.currentTrack) els.likeBtn.style.color = isLiked(state.currentTrack.id) ? '#ff4757' : '#a7a7a7'; }
 
         function updateUserStats() {
-            document.getElementById('userName').innerText = `Senior Station (${state.likedTracks.length} Likes)`;
+            document.getElementById('userName').innerText = `Senior Station (${state.likedTracks.length} titres)`;
         }
+
+        function nextTrack() {
+            if (state.currentPlaylist.length === 0) return;
+            const idx = state.currentPlaylist.findIndex(t => t.id == state.currentTrack?.id);
+            const next = state.currentPlaylist[(idx + 1) % state.currentPlaylist.length];
+            if (next) playTrack(next.id);
+        }
+
+        function prevTrack() {
+            if (state.currentPlaylist.length === 0) return;
+            const idx = state.currentPlaylist.findIndex(t => t.id == state.currentTrack?.id);
+            const prev = state.currentPlaylist[(idx - 1 + state.currentPlaylist.length) % state.currentPlaylist.length];
+            if (prev) playTrack(prev.id);
+        }
+
+        document.getElementById('nextBtn').onclick = nextTrack;
+        document.getElementById('prevBtn').onclick = prevTrack;
 
         // --- PLAYLIST MODAL ---
         window.closeModal = () => document.getElementById('playlistModal').style.display = 'none';
@@ -1083,13 +1170,21 @@
             if(!name) return;
             state.playlists.push({name, tracks: []});
             localStorage.setItem('userPlaylists', JSON.stringify(state.playlists));
-            renderUserPlaylists(); closeModal();
+            renderUserPlaylists(); closeModal(); window.showToast(`Playlist "${name}" créée`);
         };
 
         function renderUserPlaylists() {
             document.getElementById('userPlaylists').innerHTML = state.playlists.map(p => `<div class="playlist-link" onclick="loadPl('${p.name}')">${p.name}</div>`).join('');
         }
         window.loadPl = (n) => { const p = state.playlists.find(x => x.name === n); if(p) { els.sectionLabel.innerText = n; renderTracks(p.tracks, false); } };
+
+        window.showToast = (msg) => {
+            const toast = document.createElement('div');
+            toast.className = 'toast';
+            toast.innerText = msg;
+            document.getElementById('notification-container').appendChild(toast);
+            setTimeout(() => toast.remove(), 2500);
+        };
 
         // --- INIT ---
         const savedVol = localStorage.getItem('userVolume') || 0.8;
@@ -1115,11 +1210,12 @@
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     ctx.fillStyle = '#1DB954';
                     const lw = canvas.width / data.length;
-                    for (let i = 0; i < data.length; i++) ctx.fillRect(i * lw, canvas.height - data[i] / 4, lw - 1, data[i] / 4);
+                    for (let i = 0; i < data.length; i++) ctx.fillRect(i * lw, canvas.height - (data[i]/255 * canvas.height), lw - 1, (data[i]/255 * canvas.height));
                 }
                 draw();
             } catch (e) { }
         }
     </script>
 </body>
+
 </html>
