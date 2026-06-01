@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tracks Library - Senior Edition v3.2.0</title>
+    <title>Tracks Library - Senior Edition v3.3.0</title>
     <meta name="description" content="Streaming musical premium, intelligent et sans publicité.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -36,76 +36,73 @@
         /* --- SIDEBAR --- */
         .sidebar { background: #000; padding: 30px 20px; border-right: 1px solid var(--glass-border); display: flex; flex-direction: column; gap: 30px; }
         .logo { cursor: pointer; padding-left: 10px; margin-bottom: 20px; }
-        .logo i { font-style: normal; font-weight: 900; font-size: 24px; color: var(--accent); letter-spacing: -1px; }
-        .logo span { display: block; font-size: 10px; opacity: 0.6; letter-spacing: 5px; text-transform: uppercase; margin-top: -5px; }
+        .logo i { font-style: normal; font-weight: 900; font-size: 26px; color: var(--accent); letter-spacing: -1px; }
+        .logo span { display: block; font-size: 11px; opacity: 0.6; letter-spacing: 5px; text-transform: uppercase; margin-top: -5px; }
 
         .nav-section { display: flex; flex-direction: column; gap: 5px; }
         .nav-link { 
             display: flex; align-items: center; gap: 16px; color: var(--text-muted); text-decoration: none; 
-            padding: 12px 16px; border-radius: 10px; font-weight: 600; transition: 0.2s; cursor: pointer;
+            padding: 12px 16px; border-radius: 12px; font-weight: 600; transition: 0.2s; cursor: pointer;
             font-size: 15px;
         }
         .nav-link:hover, .nav-link.active { color: #fff; background: var(--glass); }
         .nav-link svg { width: 22px; height: 22px; }
 
         /* --- MAIN VIEW --- */
-        .main-view { background: radial-gradient(circle at top right, #111, #050505); overflow-y: auto; scroll-behavior: smooth; position: relative; }
+        .main-view { background: radial-gradient(circle at top right, #151515, #050505); overflow-y: auto; scroll-behavior: smooth; position: relative; }
         header { 
             padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; 
-            position: sticky; top: 0; z-index: 1000; background: rgba(5,5,5,0.7); backdrop-filter: blur(30px); border-bottom: 1px solid var(--glass-border);
+            position: sticky; top: 0; z-index: 1000; background: rgba(5,5,5,0.8); backdrop-filter: blur(40px); border-bottom: 1px solid var(--glass-border);
         }
         .search-container { position: relative; width: 400px; }
-        .search-container input { width: 100%; height: 45px; background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); border-radius: 50px; padding: 0 45px; color: #fff; outline: none; transition: 0.3s; font-size: 14px; }
-        .search-container input:focus { border-color: var(--accent); background: rgba(255,255,255,0.1); width: 500px; }
+        .search-container input { width: 100%; height: 45px; background: rgba(255,255,255,0.08); border: 1px solid var(--glass-border); border-radius: 50px; padding: 0 45px; color: #fff; outline: none; transition: 0.3s; font-size: 14px; }
+        .search-container input:focus { border-color: var(--accent); background: rgba(255,255,255,0.12); width: 500px; }
 
-        .hero-banner { 
-            margin: 40px; border-radius: 24px; height: 400px; background-size: cover; background-position: center; position: relative;
-            display: flex; align-items: flex-end; padding: 50px; overflow: hidden; box-shadow: 0 30px 60px rgba(0,0,0,0.6);
-            transition: background-image 0.5s ease-in-out;
+        .hero-spot { 
+            margin: 40px; border-radius: 28px; height: 380px; background-size: cover; background-position: center; position: relative;
+            display: flex; align-items: flex-end; padding: 50px; overflow: hidden; box-shadow: 0 40px 80px rgba(0,0,0,0.8);
+            transition: 0.6s ease;
         }
-        .hero-banner::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.9) 100%); }
-        .hero-content { position: relative; z-index: 2; width: 100%; }
+        .hero-spot::before { content: ''; position: absolute; inset: 0; background: linear-gradient(0deg, rgba(0,0,0,0.95) 0%, transparent 100%); }
+        .hero-spot-content { position: relative; z-index: 5; display: flex; align-items: center; gap: 40px; width: 100%; }
 
-        .section-padding { padding: 0 40px 60px; }
-        .track-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 24px; }
+        .content-area { padding: 0 40px 80px; }
+        .track-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 30px; }
         .track-card { 
-            background: rgba(255,255,255,0.02); padding: 18px; border-radius: 18px; border: 1px solid var(--glass-border); cursor: pointer; transition: 0.3s;
+            background: rgba(255,255,255,0.03); padding: 20px; border-radius: 20px; border: 1px solid var(--glass-border); cursor: pointer; transition: 0.3s;
             position: relative;
         }
-        .track-card:hover { transform: translateY(-10px); background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.1); }
-        .track-card img { width: 100%; aspect-ratio: 1; border-radius: 12px; margin-bottom: 15px; object-fit: cover; box-shadow: 0 8px 20px rgba(0,0,0,0.4); }
+        .track-card:hover { transform: scale(1.03) translateY(-10px); background: rgba(255,255,255,0.08); border-color: rgba(255,255,255,0.15); box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+        .track-card img { width: 100%; aspect-ratio: 1; border-radius: 14px; margin-bottom: 15px; object-fit: cover; }
         .track-card .title { font-weight: 800; font-size: 16px; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .track-card .artist { font-size: 13px; color: var(--text-muted); }
+        .track-card .artist { font-size: 13px; color: var(--text-muted); font-weight: 500; }
 
-        /* --- PLAYER PILL --- */
+        /* --- PLAYER BAR --- */
         .player-bar { 
             grid-column: 1 / -1; background: #000; border-top: 1px solid var(--glass-border); 
-            display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; padding: 0 40px;
+            display: grid; grid-template-columns: 1fr 2fr 1fr; align-items: center; padding: 0 40px; z-index: 2000;
         }
-        .track-info-mini { display: flex; align-items: center; gap: 18px; overflow: hidden; }
-        .track-info-mini img { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; }
+        .mini-info { display: flex; align-items: center; gap: 20px; overflow: hidden; }
+        .mini-info img { width: 64px; height: 64px; border-radius: 12px; object-fit: cover; }
         
-        .player-controls-main { display: flex; flex-direction: column; align-items: center; gap: 12px; }
-        .action-btns { display: flex; align-items: center; gap: 35px; }
-        .play-toggle { background: #fff; color: #000; width: 44px; height: 44px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
-        .play-toggle:hover { transform: scale(1.1); }
+        .controls-ui { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .btns-row { display: flex; align-items: center; gap: 40px; }
+        .p-btn-play { background: #fff; color: #000; width: 44px; height: 44px; border-radius: 50%; border: none; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; box-shadow: 0 5px 15px rgba(255,255,255,0.1); }
+        .p-btn-play:hover { transform: scale(1.1); box-shadow: 0 8px 20px rgba(255,255,255,0.2); }
         
-        .progress-block { width: 100%; max-width: 700px; display: flex; align-items: center; gap: 18px; font-size: 12px; color: var(--text-muted); }
-        .progress-rail { flex-grow: 1; height: 6px; background: #222; border-radius: 10px; cursor: pointer; position: relative; overflow: hidden; }
-        .progress-done { height: 100%; background: #fff; width: 0%; border-radius: 10px; pointer-events: none; transition: width 0.1s linear; }
-        .progress-rail:hover .progress-done { background: var(--accent); }
+        .progress-row { width: 100%; max-width: 700px; display: flex; align-items: center; gap: 15px; font-size: 12px; color: var(--text-muted); font-weight: 700; }
+        .progress-bg { flex-grow: 1; height: 6px; background: #2a2a2a; border-radius: 10px; cursor: pointer; position: relative; overflow: hidden; }
+        .progress-fill { height: 100%; background: #fff; width: 0%; border-radius: 10px; pointer-events: none; transition: width 0.1s linear; }
+        .progress-bg:hover .progress-fill { background: var(--accent); }
 
-        /* --- CATEGORY SELECTOR --- */
-        .category-scroll { display: flex; gap: 12px; padding: 15px 40px; overflow-x: auto; scrollbar-width: none; mask-image: linear-gradient(to right, #000 80%, transparent 100%); }
-        .cat-pill { background: rgba(255,255,255,0.05); border: 1px solid var(--glass-border); color: #fff; padding: 10px 22px; border-radius: 50px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.3s; white-space: nowrap; }
-        .cat-pill.active { background: var(--accent); color: #000; border-color: var(--accent); transform: scale(1.05); }
+        .cat-bar { display: flex; gap: 12px; padding: 15px 40px; overflow-x: auto; scrollbar-width: none; }
+        .cat-item { background: rgba(255,255,255,0.06); border: 1px solid var(--glass-border); color: #fff; padding: 12px 24px; border-radius: 50px; font-size: 14px; font-weight: 800; cursor: pointer; transition: 0.3s; white-space: nowrap; }
+        .cat-item.active { background: var(--accent); color: #000; border-color: var(--accent); transform: scale(1.05); }
 
-        .toast-msg { position: fixed; bottom: 125px; right: 40px; background: var(--accent); color: #000; padding: 14px 28px; border-radius: 14px; font-weight: 900; animation: popUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; z-index: 10000; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
-        @keyframes popUp { from { opacity: 0; transform: translateY(30px) scale(0.9); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        .toast-popup { position: fixed; bottom: 125px; right: 40px; background: var(--accent); color: #000; padding: 15px 30px; border-radius: 15px; font-weight: 900; animation: bounceUp 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; z-index: 10000; box-shadow: 0 15px 40px rgba(0,0,0,0.6); }
+        @keyframes bounceUp { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
-        .loading-state { grid-column: 1 / -1; text-align: center; padding: 100px; }
-        .error-state { grid-column: 1 / -1; text-align: center; padding: 60px; background: rgba(255,0,0,0.05); border-radius: 20px; border: 1px dashed rgba(255,0,0,0.2); }
-        .btn-retry { margin-top: 20px; background: var(--accent); border: none; padding: 10px 25px; border-radius: 30px; font-weight: 800; cursor: pointer; }
+        #vizOverlay { position: fixed; bottom: var(--player-height); left: 0; width: 100%; height: 50px; pointer-events: none; opacity: 0.1; z-index: 1500; }
     </style>
 </head>
 
@@ -114,108 +111,107 @@
         <aside class="sidebar">
             <div class="logo" onclick="location.reload()">
                 <i>TRACKS</i>
-                <span>Technologies</span>
+                <span>TECHNOLOGIES</span>
             </div>
             <div class="nav-section">
                 <div class="nav-link active" onclick="goHome()" id="navHome">
                     <svg fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Accueil
                 </div>
-                <div class="nav-link" onclick="document.getElementById('mainSearch').focus()">
+                <div class="nav-link" onclick="document.getElementById('mSearch').focus()">
                     <svg fill="currentColor" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg> Recherche
                 </div>
                 <div class="nav-link" onclick="goLiked()" id="navLiked">
                     <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> Titres likés
                 </div>
             </div>
-            <div style="margin-top:auto; padding: 20px; border: 1px solid var(--glass-border); border-radius:15px; background:var(--glass);">
-                <p style="font-size:12px; font-weight:800; margin-bottom:5px;">PLAYLISTS SENIOR</p>
-                <div style="font-size:11px; color:var(--text-muted); line-height:1.8;">
-                    <p>• Génération 80s</p>
-                    <p>• Classiques du Jazz</p>
-                    <p>• Relaxation Lounge</p>
+            <div style="margin-top:auto; padding: 25px; border: 1px solid var(--glass-border); border-radius:20px; background:var(--glass);">
+                <p style="font-size:12px; font-weight:900; margin-bottom:10px; color:var(--accent);">ESPACE SENIOR</p>
+                <div style="font-size:13px; color:var(--text-muted); line-height:2.0; font-weight:600;">
+                    <p style="cursor:pointer;" onclick="load('80s disco')">💃 Les Années Disco</p>
+                    <p style="cursor:pointer;" onclick="load('french classics')">🇫🇷 Chanson Française</p>
+                    <p style="cursor:pointer;" onclick="load('classic jazz lounge')">🎷 Ambiance Jazz</p>
                 </div>
             </div>
         </aside>
 
         <main class="main-view">
+            <canvas id="vizOverlay"></canvas>
             <header>
                 <div class="search-container">
-                    <input type="text" id="mainSearch" placeholder="Quel titre recherchez-vous aujourd'hui ?">
+                    <input type="text" id="mSearch" placeholder="Recherchez un artiste ou un titre...">
                 </div>
-                <div style="display:flex; align-items:center; gap:15px;">
+                <div style="display:flex; align-items:center; gap:20px;">
                     <div style="text-align:right;">
-                        <p style="font-size:12px; font-weight:800;">SESSION ACTIVE</p>
-                        <p style="font-size:10px; color:var(--accent);">PREMIUM PLUS</p>
+                        <p style="font-size:12px; font-weight:900; letter-spacing:1px;">MEMBRE PRIVILÈGE</p>
+                        <p style="font-size:10px; color:var(--accent); font-weight:800;">ÉTAT : CONNECTÉ • HI-FI</p>
                     </div>
-                    <img src="https://ui-avatars.com/api/?name=User&background=1DB954&color=fff" style="width:40px; height:40px; border-radius:50%; border: 2px solid var(--glass-border);">
+                    <img src="https://ui-avatars.com/api/?name=User&background=1DB954&color=fff" style="width:44px; height:44px; border-radius:50%; border: 3px solid var(--glass-border); box-shadow: 0 5px 15px rgba(0,0,0,0.3);">
                 </div>
             </header>
 
-            <div class="category-scroll">
-                <button class="cat-pill active">Tous</button>
-                <button class="cat-pill">Hits Fr</button>
-                <button class="cat-pill">USA Chart</button>
-                <button class="cat-pill">Rock Legends</button>
-                <button class="cat-pill">Zen & Calm</button>
-                <button class="cat-pill">Workout</button>
+            <div class="cat-bar">
+                <button class="cat-item active">Tout découvrir</button>
+                <button class="cat-item">Nouveautés 2026</button>
+                <button class="cat-item">Top 50 France</button>
+                <button class="cat-item">Rock & Roll</button>
+                <button class="cat-item">Lofi Études</button>
+                <button class="cat-item">Méditation</button>
             </div>
 
-            <section class="hero-banner" id="heroArea">
-                <div class="hero-content">
-                    <div style="display:flex; align-items:center; gap:25px;">
-                        <img id="heroImg" src="" style="width:180px; height:180px; border-radius:15px; display:none; box-shadow: 0 20px 40px rgba(0,0,0,0.8);">
-                        <div>
-                            <span style="background:var(--accent); color:#000; padding:6px 15px; border-radius:8px; font-size:12px; font-weight:900; box-shadow: 0 5px 15px rgba(29, 185, 84, 0.3);">PLAY RÉCENT</span>
-                            <h1 id="heroTitle" style="font-size: 64px; margin: 15px 0; letter-spacing: -2px; line-height:1;">Découvrez...</h1>
-                            <p id="heroSubtitle" style="font-size: 18px; color:rgba(255,255,255,0.7);"></p>
-                            <button id="heroPlayBtn" style="margin-top:25px; background:#fff; color:#000; border:none; padding:15px 40px; border-radius:40px; font-weight:900; font-size:16px; cursor:pointer; box-shadow: 0 10px 30px rgba(255,255,255,0.2);">ÉCOUTER MAINTENANT</button>
-                        </div>
+            <section class="hero-spot" id="heroBox">
+                <div class="hero-spot-content">
+                    <img id="hImg" src="" style="width:200px; height:200px; border-radius:20px; display:none; box-shadow: 0 30px 60px rgba(0,0,0,0.9);">
+                    <div>
+                        <span style="background:var(--accent); color:#000; padding:8px 18px; border-radius:10px; font-size:12px; font-weight:900;">AFFICHE DU MOMENT</span>
+                        <h1 id="hTitle" style="font-size: 72px; margin: 15px 0; letter-spacing: -3px; line-height:0.9; text-shadow: 0 10px 30px rgba(0,0,0,0.5);">Prêt pour l'écoute ?</h1>
+                        <p id="hArtist" style="font-size: 20px; color:rgba(255,255,255,0.8); font-weight:400;"></p>
+                        <button id="hPlay" style="margin-top:30px; background:#fff; color:#000; border:none; padding:18px 45px; border-radius:50px; font-weight:900; font-size:18px; cursor:pointer; transition:0.2s;">LECTURE DIRECTE</button>
                     </div>
                 </div>
             </section>
 
-            <div class="section-padding">
-                <h2 id="viewTitle" style="font-size: 24px; font-weight: 800; margin-bottom: 25px;">Titres recommandés</h2>
-                <div class="track-grid" id="mainGrid"></div>
+            <div class="content-area">
+                <h2 id="vTitle" style="font-size: 28px; font-weight: 900; margin-bottom: 30px;">Sélectionné pour vous</h2>
+                <div class="track-grid" id="mGrid"></div>
             </div>
         </main>
 
         <footer class="player-bar">
-            <div class="track-info-mini">
-                <img id="playerImg" src="https://picsum.photos/100/100">
+            <div class="mini-info">
+                <img id="pImg" src="https://picsum.photos/100/100">
                 <div style="overflow:hidden;">
-                    <div id="playerTitle" style="font-weight:800; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Prêt pour la musique</div>
-                    <div id="playerArtist" style="color:var(--text-muted); font-size:12px;">Sélectionnez un titre</div>
+                    <div id="pTitle" style="font-weight:900; font-size:16px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">En attente de musique</div>
+                    <div id="pArtist" style="color:var(--text-muted); font-size:13px; font-weight:600;">Choisissez un titre</div>
                 </div>
-                <button id="likeToggle" style="background:none; border:none; color:#a7a7a7; cursor:pointer; transition:0.2s;"><svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
+                <button id="lBtn" style="background:none; border:none; color:#a7a7a7; cursor:pointer; transition:0.2s;"><svg width="26" height="26" fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></button>
             </div>
 
-            <div class="player-controls-main">
-                <div class="action-btns">
-                    <button id="pPrev" style="background:none; border:none; color:#fff; cursor:pointer;"><svg width="30" height="30" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
-                    <button class="play-toggle" id="pSwitch"><svg id="pIcon" width="26" height="26" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
-                    <button id="pNext" style="background:none; border:none; color:#fff; cursor:pointer;"><svg width="30" height="30" fill="currentColor"><path d="M6 18l8.5-6L6 6zm9-12h2v12h-2z"/></svg></button>
+            <div class="controls-ui">
+                <div class="btns-row">
+                    <button id="pPrev" style="background:none; border:none; color:#fff; cursor:pointer;"><svg width="34" height="34" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+                    <button class="p-btn-play" id="pSwitch"><svg id="pIcon" width="28" height="28" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button>
+                    <button id="pNext" style="background:none; border:none; color:#fff; cursor:pointer;"><svg width="34" height="34" fill="currentColor"><path d="M6 18l8.5-6L6 6zm9-12h2v12h-2z"/></svg></button>
                 </div>
-                <div class="progress-block">
-                    <span id="pCur">0:00</span>
-                    <div class="progress-rail" id="pRail"><div class="progress-done" id="pDone"></div></div>
-                    <span id="pDur">0:00</span>
+                <div class="progress-row">
+                    <span id="pCurT">0:00</span>
+                    <div class="progress-bg" id="pBg"><div class="progress-fill" id="pFill"></div></div>
+                    <span id="pDurT">0:00</span>
                 </div>
             </div>
 
             <div style="display:flex; justify-content:flex-end;">
-                <div class="progress-rail" style="width:120px;" id="vRail"><div class="progress-done" id="vDone" style="width:80%;"></div></div>
+                <div class="progress-bg" style="width:130px;" id="vBg"><div class="progress-fill" id="vFill" style="width:80%;"></div></div>
             </div>
         </footer>
     </div>
 
-    <audio id="audioCore" crossorigin="anonymous"></audio>
+    <audio id="coreP" crossorigin="anonymous"></audio>
 
     <script>
         const SERVERS = [
-            'https://inv.riverside.rocks', 'https://invidious.kavin.rocks', 
-            'https://yewtu.be', 'https://invidious.snopyta.org',
-            'https://vid.priv.au', 'https://invidious.flokinet.to'
+            'https://invidious.kavin.rocks', 'https://yewtu.be', 
+            'https://inv.riverside.rocks', 'https://invidious.snopyta.org',
+            'https://vid.priv.au', 'https://invidious.namazso.eu'
         ];
         let sIdx = 0;
         
@@ -225,15 +221,22 @@
             cache: JSON.parse(localStorage.getItem('searchCache') || '[]')
         };
 
+        // Normalization: fix "undefined" artists from old versions
+        state.liked = state.liked.map(t => ({
+            ...t,
+            artist: t.artist || t.author || "Artiste Inconnu",
+            img: t.img || `https://picsum.photos/400/400?sig=${t.id}`
+        }));
+
         const ui = {
-            core: document.getElementById('audioCore'), grid: document.getElementById('mainGrid'),
-            search: document.getElementById('mainSearch'), playBtn: document.getElementById('pSwitch'),
-            pIcon: document.getElementById('pIcon'), pDone: document.getElementById('pDone'),
-            curT: document.getElementById('pCur'), durT: document.getElementById('pDur'),
-            likeBtn: document.getElementById('likeToggle')
+            audio: document.getElementById('coreP'), grid: document.getElementById('mGrid'),
+            search: document.getElementById('mSearch'), playBtn: document.getElementById('pSwitch'),
+            pIcon: document.getElementById('pIcon'), pFill: document.getElementById('pFill'),
+            curT: document.getElementById('pCurT'), durT: document.getElementById('pDurT'),
+            likeBtn: document.getElementById('lBtn')
         };
 
-        async function fetchAPI(q = 'lofi music audio') {
+        async function fetchAPI(q = 'lofi music') {
             const base = SERVERS[sIdx];
             try {
                 const res = await fetch(`${base}/api/v1/search?q=${encodeURIComponent(q)}&type=video`);
@@ -242,27 +245,38 @@
                 const mapped = json.slice(0, 30).map(v => ({
                     id: v.videoId, 
                     name: v.title.replace(/official audio|official video|music video/gi, '').trim(),
-                    artist: v.author, 
+                    artist: v.author || "Artiste Inconnu", 
                     img: v.videoThumbnails ? v.videoThumbnails[0].url : `https://picsum.photos/400/400?sig=${v.videoId}`,
                     url: `${base}/latest/videoplayback?id=${v.videoId}&itag=140`
                 }));
                 localStorage.setItem('searchCache', JSON.stringify(mapped));
                 return mapped;
             } catch (e) {
-                sIdx = (sIdx + 1) % SERVERS.length;
-                return state.cache.length > 0 ? state.cache : [];
+                // FALLBACK TO AUDIUS IF INVIDIOUS FAILS
+                try {
+                    const res = await fetch(`https://api.audius.co/v1/tracks/trending?app_name=TRACKS_LIB`);
+                    const json = await res.json();
+                    return json.data.slice(0, 24).map(t => ({
+                        id: t.id, name: t.title, artist: t.user.name,
+                        img: t.artwork ? t.artwork['480x480'] : 'https://picsum.photos/400/400',
+                        url: `https://api.audius.co/v1/tracks/${t.id}/stream?app_name=TRACKS_LIB`
+                    }));
+                } catch(e2) {
+                    sIdx = (sIdx + 1) % SERVERS.length;
+                    return state.cache.length > 0 ? state.cache : [];
+                }
             }
         }
 
         async function load(q) {
-            ui.grid.innerHTML = '<div class="loading-state"><h3>RÉCUPÉRATION DU FLUX...</h3><p>Veuillez patienter.</p></div>';
+            ui.grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:100px; color:var(--text-muted);"><h3>CHARGEMENT DU FLUX...</h3></div>';
             const data = await fetchAPI(q);
             if(data.length > 0) {
                 state.list = data;
                 render(data);
                 hero(data[Math.floor(Math.random() * data.length)]);
             } else {
-                ui.grid.innerHTML = '<div class="error-state"><h3>FLUX INTERROMPU</h3><p>Les serveurs sont instables. Essayez d\'actualiser.</p><button class="btn-retry" onclick="load()">RÉESSAYER</button></div>';
+                ui.grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:50px; background:rgba(255,0,0,0.05); border-radius:20px;"><h3>FLUX INDISPONIBLE</h3><p>Les serveurs sont saturés. Cliquez pour réessayer.</p><button onclick="load()" style="margin-top:20px; background:var(--accent); border:none; padding:10px 25px; border-radius:30px; font-weight:800; cursor:pointer;">ACTUALISER</button></div>';
             }
         }
 
@@ -280,12 +294,13 @@
             const t = state.list.find(x => x.id == id) || state.liked.find(x => x.id == id);
             if(!t) return;
             state.cur = t;
-            ui.core.src = t.url;
-            ui.core.play().catch(() => next());
-            document.getElementById('playerTitle').innerText = t.name;
-            document.getElementById('playerArtist').innerText = t.artist;
-            document.getElementById('playerImg').src = t.img;
+            ui.audio.src = t.url;
+            ui.audio.play().catch(() => next());
+            document.getElementById('pTitle').innerText = t.name;
+            document.getElementById('pArtist').innerText = t.artist;
+            document.getElementById('pImg').src = t.img;
             updateLike();
+            startVisualizer();
         }
 
         function next() {
@@ -296,12 +311,12 @@
 
         function hero(t) {
             if(!t) return;
-            document.getElementById('heroTitle').innerText = t.name;
-            document.getElementById('heroSubtitle').innerText = t.artist;
-            document.getElementById('heroImg').src = t.img;
-            document.getElementById('heroImg').style.display = 'block';
-            document.getElementById('heroArea').style.backgroundImage = `linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.9) 100%), url('${t.img}')`;
-            document.getElementById('heroPlayBtn').onclick = () => play(t.id);
+            document.getElementById('hTitle').innerText = t.name;
+            document.getElementById('hArtist').innerText = `Par ${t.artist}`;
+            document.getElementById('hImg').src = t.img;
+            document.getElementById('hImg').style.display = 'block';
+            document.getElementById('heroBox').style.backgroundImage = `linear-gradient(0deg, rgba(0,0,0,0.95) 0%, transparent 100%), url('${t.img}')`;
+            document.getElementById('hPlay').onclick = () => play(t.id);
         }
 
         function updateLike() {
@@ -316,48 +331,67 @@
             else state.liked.push(state.cur);
             localStorage.setItem('likedTracks', JSON.stringify(state.liked));
             updateLike();
-            toast(idx > -1 ? "Retiré" : "Cœur ajouté");
+            toast(idx > -1 ? "Retiré" : "Ajouté aux favoris !");
         };
 
-        ui.playBtn.onclick = () => state.play ? ui.core.pause() : ui.core.play();
-        ui.core.onplay = () => { state.play = true; ui.pIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; };
-        ui.core.onpause = () => { state.play = false; ui.pIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; };
-        ui.core.onended = () => next();
-        ui.core.ontimeupdate = () => {
-            const p = (ui.core.currentTime / ui.core.duration) * 100 || 0;
-            ui.pDone.style.width = `${p}%`;
-            ui.curT.innerText = time(ui.core.currentTime);
-            ui.durT.innerText = time(ui.core.duration);
+        ui.playBtn.onclick = () => state.play ? ui.audio.pause() : ui.audio.play();
+        ui.audio.onplay = () => { state.play = true; ui.pIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; };
+        ui.audio.onpause = () => { state.play = false; ui.pIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; };
+        ui.audio.onended = () => next();
+        ui.audio.ontimeupdate = () => {
+            const p = (ui.audio.currentTime / ui.audio.duration) * 100 || 0;
+            ui.pFill.style.width = `${p}%`;
+            ui.curT.innerText = fmt(ui.audio.currentTime);
+            ui.durT.innerText = fmt(ui.audio.duration);
         };
 
-        function time(s) { 
-            if(isNaN(s)) return '0:00';
-            const m = Math.floor(s/60), sec = Math.floor(s%60); 
-            return `${m}:${sec<10?'0':''}${sec}`; 
-        }
+        function fmt(s) { if(isNaN(s)) return '0:00'; const m = Math.floor(s/60), sec = Math.floor(s%60); return `${m}:${sec<10?'0':''}${sec}`; }
 
         function goHome() { 
-            document.getElementById('viewTitle').innerText = "Titres recommandés";
+            document.getElementById('vTitle').innerText = "Sélectionné pour vous";
             document.getElementById('navHome').classList.add('active');
             document.getElementById('navLiked').classList.remove('active');
             load(); 
         }
         function goLiked() { 
-            document.getElementById('viewTitle').innerText = "Titres likés";
+            document.getElementById('vTitle').innerText = "Vos coups de cœur";
             document.getElementById('navHome').classList.remove('active');
             document.getElementById('navLiked').classList.add('active');
             render(state.liked); 
         }
 
-        document.querySelectorAll('.cat-pill').forEach(p => p.onclick = () => {
-            document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.cat-item').forEach(p => p.onclick = () => {
+            document.querySelectorAll('.cat-item').forEach(b => b.classList.remove('active'));
             p.classList.add('active');
-            load(p.innerText + " music");
+            load(p.innerText);
         });
         ui.search.onkeypress = (e) => e.key === 'Enter' && load(ui.search.value);
 
+        let vCtx, vAn, vSrc;
+        function startVisualizer() {
+            if(vCtx) return;
+            try {
+                vCtx = new (window.AudioContext || window.webkitAudioContext)();
+                vAn = vCtx.createAnalyser();
+                vSrc = vCtx.createMediaElementSource(ui.audio);
+                vSrc.connect(vAn); vAn.connect(vCtx.destination);
+                const cvs = document.getElementById('vizOverlay');
+                const ctx = cvs.getContext('2d');
+                function draw() {
+                    requestAnimationFrame(draw);
+                    const data = new Uint8Array(vAn.frequencyBinCount);
+                    vAn.getByteFrequencyData(data);
+                    ctx.clearRect(0,0,cvs.width,cvs.height);
+                    ctx.fillStyle = '#1DB954';
+                    const lw = cvs.width / 128;
+                    for(let i=0; i<128; i++) ctx.fillRect(i*lw, cvs.height - (data[i]/255 * cvs.height), lw-1, data[i]);
+                }
+                draw();
+            } catch(e){}
+        }
+
         function toast(m) {
-            const t = document.createElement('div'); t.className = 'toast-msg'; t.innerText = m;
+            const t = document.createElement('div'); t.className = 'toast-popup'; t.innerText = m;
             document.body.appendChild(t); setTimeout(() => t.remove(), 2500);
         }
 
