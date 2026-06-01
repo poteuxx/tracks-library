@@ -660,12 +660,11 @@
     <div class="app-container">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
-            <div class="logo" id="mainHomeLink"
-                style="display: flex; flex-direction: column; align-items: flex-start; gap: 0; line-height: 1;">
+            <div class="logo" id="mainHomeLink" onclick="setView('home')">
                 <span
-                    style="color: #1DB954; font-weight: 900; font-size: 22px; letter-spacing: 1px; text-transform: uppercase; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">Solutions</span>
+                    style="color: #1DB954; font-weight: 900; font-size: 22px; letter-spacing: 1px; text-transform: uppercase;">Solutions</span>
                 <span
-                    style="color: #1DB954; font-weight: 400; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; opacity: 0.8; margin-top: -2px;">Technologies</span>
+                    style="color: #1DB954; font-weight: 400; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; opacity: 0.8; margin-top: -2px; display: block;">Technologies</span>
             </div>
             <nav id="sidebarNav">
                 <div class="nav-item active" id="navHome" onclick="setView('home')">
@@ -674,7 +673,7 @@
                     </svg>
                     Accueil
                 </div>
-                <div class="nav-item" id="navSearch" onclick="els.search.focus()">
+                <div class="nav-item" id="navSearch" onclick="document.getElementById('userSearch').focus()">
                     <svg fill="currentColor" viewBox="0 0 24 24">
                         <path
                             d="M15.5 14h-.79l-.28-.27A6.471 6.471 0 0016 9.5 6.5 6.5 0 109.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
@@ -902,13 +901,13 @@
         window.onkeydown = (e) => {
             if (document.activeElement.tagName === 'INPUT') return;
             switch(e.code) {
-                case 'Space': e.preventDefault(); els.playBtn.click(); break;
+                case 'Space': e.preventDefault(); if(els.playBtn) els.playBtn.click(); break;
                 case 'ArrowRight': if(e.ctrlKey) nextTrack(); break;
                 case 'ArrowLeft': if(e.ctrlKey) prevTrack(); break;
                 case 'ArrowUp': e.preventDefault(); changeVolume(0.1); break;
                 case 'ArrowDown': e.preventDefault(); changeVolume(-0.1); break;
                 case 'KeyL': toggleLikeById(state.currentTrack?.id); break;
-                case 'KeyF': document.getElementById('fullscreenBtn').click(); break;
+                case 'KeyF': if(document.getElementById('fullscreenBtn')) document.getElementById('fullscreenBtn').click(); break;
             }
         };
 
@@ -935,21 +934,15 @@
         // --- API HANDLERS ---
         async function fetchAPI(endpoint, params = {}) {
             if (state.sourceMode === 'radios' || params.isRadio) return fetchRadios(params.search);
-            
             let results = [];
-            
-            // PRIORITY 1: Spotify Mode (Invidious Multi-instance)
             if (state.sourceMode === 'spotify' || params.search) {
                 const hq = await fetchHQWithFallback(params.search || 'top hits 2026');
-                if (hq && hq.length > 0) results = [...hq.map(t => ({...t, source: 'Spotify HQ'}))];
+                if (hq) results = [...hq.map(t => ({...t, source: 'Spotify HQ'}))];
             }
-
-            // PRIORITY 2: Audius fallback (High Reliability)
             if (results.length < 5) {
                 const aud = await fetchAudius(params.search);
                 if (aud) results = [...results, ...aud.map(t => ({...t, source: 'Premium'}))];
             }
-
             const unique = results.filter((v, i, a) => a.findIndex(t => t.id === v.id) === i);
             return applySorting(unique);
         }
@@ -1027,22 +1020,19 @@
                 </div>
             `).join('');
             if (append) els.grid.insertAdjacentHTML('beforeend', html);
-            else els.grid.innerHTML = html || '<p style="text-align:center; padding: 40px; grid-column: 1/-1;">Aucun morceau disponible. Veuillez vérifier votre connexion ou changer de source.</p>';
+            else els.grid.innerHTML = html || '<p style="text-align:center; padding: 40px; grid-column: 1/-1;">Aucun morceau disponible.</p>';
             els.gridFooter.style.display = (state.currentView !== 'liked' && state.currentView !== 'library' && data.length > 0) ? 'block' : 'none';
         }
 
         async function loadCatalog(append = false) {
             try {
-                if (!append) {
-                    els.grid.innerHTML = '<div class="loader"><div class="spinner"></div></div>';
-                    state.offset = 0;
-                }
+                if (!append) { els.grid.innerHTML = '<div class="loader"><div class="spinner"></div></div>'; state.offset = 0; }
                 const data = await fetchAPI('tracks');
                 state.currentPlaylist = append ? [...state.currentPlaylist, ...data] : data;
                 renderTracks(data, append);
                 if (data.length > 0 && !append) updateHero(data[0]);
             } catch (e) {
-                els.grid.innerHTML = '<p style="text-align:center; padding: 40px; grid-column: 1/-1;">Erreur de chargement. Veuillez réessayer.</p>';
+                els.grid.innerHTML = '<p style="text-align:center; padding: 40px; grid-column: 1/-1;">Erreur de chargement.</p>';
             }
         }
 
@@ -1051,10 +1041,7 @@
             if (!track) return;
             state.currentTrack = track;
             els.audio.src = track.audio;
-            els.audio.play().catch(e => {
-                window.showToast("Erreur de flux. Tentative suivante...");
-                nextTrack();
-            });
+            els.audio.play().catch(e => { window.showToast("Erreur de flux. Tentative suivante..."); nextTrack(); });
             document.getElementById('currentTrackTitle').innerText = track.name;
             document.getElementById('currentTrackArtist').innerText = track.artist_name;
             document.getElementById('currentTrackImg').src = track.image;
@@ -1101,7 +1088,7 @@
                 btn.classList.add('active');
                 state.category = btn.dataset.tag; 
                 state.sourceMode = 'spotify';
-                els.sourceFilter.value = 'spotify';
+                els.mainView.scrollTo(0,0);
                 handleSearch(btn.innerText.split(' ').pop());
             };
         });
@@ -1110,6 +1097,7 @@
         els.playBtn.onclick = () => state.isPlaying ? els.audio.pause() : els.audio.play();
         els.audio.onplay = () => { state.isPlaying = true; els.playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; };
         els.audio.onpause = () => { state.isPlaying = false; els.playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; };
+        els.audio.onended = () => nextTrack();
         els.audio.ontimeupdate = () => {
             if (els.audio.duration) {
                 const p = (els.audio.currentTime / els.audio.duration) * 100;
@@ -1133,10 +1121,7 @@
 
         function updateHero(t) { document.getElementById('heroTitle').innerText = t.name; document.getElementById('heroDesc').innerText = `En vedette : ${t.artist_name}`; document.getElementById('heroImg').src = t.image; }
         function updateLikeBtn() { if(state.currentTrack) els.likeBtn.style.color = isLiked(state.currentTrack.id) ? '#ff4757' : '#a7a7a7'; }
-
-        function updateUserStats() {
-            document.getElementById('userName').innerText = `Senior Station (${state.likedTracks.length} titres)`;
-        }
+        function updateUserStats() { document.getElementById('userName').innerText = `Senior Station (${state.likedTracks.length} titres)`; }
 
         function nextTrack() {
             if (state.currentPlaylist.length === 0) return;
