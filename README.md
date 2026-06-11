@@ -14,10 +14,10 @@
 - **🚀 Discovery Priority**: Intelligent search and trending logic that prioritizes high-quality official audio (Spotify HQ Mode).
 - **📱 Fully Responsive**: A mobile-first design with a functional sidebar, responsive grids, and optimized playback controls for all devices.
 - **📡 Multi-Source Resilience**: Uses a failover framework across multiple Invidious instances and Audius for maximum uptime.
-- **🎙️ Global Radio**: Access to thousands of live radio stations worldwide via the Radio Browser API.
+- **🎙️ Focus on Music**: Pure discovery and listening without commercials or ads.
 - **📊 Interactive Visualizer**: Real-time audio frequency visualizer with mirror-center dynamics.
 - **💾 Local Storage**: Keep your history, liked tracks, and custom playlists synced to your browser.
-- **⌨️ Power User Controls**: Universal media control support (MediaSession API) and global keyboard shortcuts.
+- **⌨️ Power User Controls**: Global keyboard shortcuts for ultimate music control.
 
 ---
 
@@ -28,7 +28,6 @@
 - **APIs**:
   - **Invidious (YouTube)**: For high-quality HQ streaming.
   - **Audius**: For premium independent discovery.
-  - **Radio Browser**: For live international broadcasting.
 - **Deployment**: Zero-dependency architecture, ready for single-file deployment or PWA.
 
 ---

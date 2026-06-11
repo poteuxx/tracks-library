@@ -103,6 +103,35 @@
         @keyframes bounceUp { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
         
         #vizOverlay { position: fixed; bottom: var(--player-height); left: 0; width: 100%; height: 50px; pointer-events: none; opacity: 0.1; z-index: 1500; }
+        
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .app-container { display: flex; flex-direction: column; overflow: hidden; }
+            .sidebar { display: none; }
+            .mobile-nav { display: flex; justify-content: space-around; background: rgba(5,5,5,0.95); backdrop-filter: blur(20px); border-top: 1px solid var(--glass-border); padding: 10px; z-index: 2100; position: fixed; bottom: 0; width: 100%; }
+            .mobile-nav .nav-link { flex-direction: column; gap: 5px; font-size: 11px; padding: 5px; align-items: center; justify-content: center; flex: 1; margin: 0; }
+            .main-view { height: calc(100vh - 140px); overflow-y: auto; padding-bottom: 20px; }
+            header { padding: 15px 20px; flex-direction: column; gap: 15px; }
+            .search-container { width: 100%; }
+            .search-container input:focus { width: 100%; }
+            .hero-spot { height: auto; padding: 30px 20px; margin: 20px; text-align: center; align-items: center; justify-content: center; overflow: visible;}
+            .hero-spot-content { flex-direction: column; align-items: center; gap: 20px; }
+            .hero-spot h1 { font-size: 32px !important; margin: 10px 0; }
+            #hImg { width: 150px !important; height: 150px !important; margin-top: -60px; }
+            .content-area { padding: 0 20px 40px; }
+            .player-bar { 
+                grid-template-columns: 1fr; padding: 10px 20px; height: auto; position: fixed; bottom: 65px; width: 100%; 
+                border-top: 1px solid rgba(255,255,255,0.1); background: rgba(0,0,0,0.95); z-index: 2000;
+                gap: 10px;
+            }
+            .controls-ui { margin-top: 5px; }
+            .btns-row { gap: 20px; justify-content: center; width: 100%; }
+            .mini-info { justify-content: flex-start; }
+            .mini-info img { width: 44px; height: 44px; }
+            #vBg { display: none; }
+            #vizOverlay { bottom: 140px; }
+        }
+        @media (min-width: 769px) { .mobile-nav { display: none; } }
     </style>
 </head>
 
@@ -124,12 +153,13 @@
                     <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> Titres likés
                 </div>
             </div>
+            </div>
             <div style="margin-top:auto; padding: 25px; border: 1px solid var(--glass-border); border-radius:20px; background:var(--glass);">
-                <p style="font-size:12px; font-weight:900; margin-bottom:10px; color:var(--accent);">ESPACE SENIOR</p>
+                <p style="font-size:12px; font-weight:900; margin-bottom:10px; color:var(--accent);">PLAYLISTS</p>
                 <div style="font-size:13px; color:var(--text-muted); line-height:2.0; font-weight:600;">
-                    <p style="cursor:pointer;" onclick="load('80s disco')">💃 Les Années Disco</p>
-                    <p style="cursor:pointer;" onclick="load('french classics')">🇫🇷 Chanson Française</p>
-                    <p style="cursor:pointer;" onclick="load('classic jazz lounge')">🎷 Ambiance Jazz</p>
+                    <p style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-muted)'" onclick="load('80s disco')">💃 Les Années Disco</p>
+                    <p style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-muted)'" onclick="load('lofi beats')">☕ Lofi Beats</p>
+                    <p style="cursor:pointer; transition:0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='var(--text-muted)'" onclick="load('classic jazz lounge')">🎷 Ambiance Jazz</p>
                 </div>
             </div>
         </aside>
@@ -203,6 +233,16 @@
                 <div class="progress-bg" style="width:130px;" id="vBg"><div class="progress-fill" id="vFill" style="width:80%;"></div></div>
             </div>
         </footer>
+
+        <!-- Mobile Navigation -->
+        <div class="mobile-nav">
+            <div class="nav-link active" onclick="goHome()" id="navHomeMob">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg> Accueil
+            </div>
+            <div class="nav-link" onclick="goLiked()" id="navLikedMob">
+                <svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg> Likés
+            </div>
+        </div>
     </div>
 
     <audio id="coreP" crossorigin="anonymous"></audio>
@@ -351,13 +391,22 @@
             document.getElementById('vTitle').innerText = "Sélectionné pour vous";
             document.getElementById('navHome').classList.add('active');
             document.getElementById('navLiked').classList.remove('active');
+            if(document.getElementById('navHomeMob')) document.getElementById('navHomeMob').classList.add('active');
+            if(document.getElementById('navLikedMob')) document.getElementById('navLikedMob').classList.remove('active');
             load(); 
         }
         function goLiked() { 
             document.getElementById('vTitle').innerText = "Vos coups de cœur";
             document.getElementById('navHome').classList.remove('active');
             document.getElementById('navLiked').classList.add('active');
-            render(state.liked); 
+            if(document.getElementById('navHomeMob')) document.getElementById('navHomeMob').classList.remove('active');
+            if(document.getElementById('navLikedMob')) document.getElementById('navLikedMob').classList.add('active');
+            
+            if (state.liked.length === 0) {
+                ui.grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:100px; color:var(--text-muted);"><h3>Aucun titre liké</h3><p>Vos pistes favorites apparaîtront ici.</p></div>';
+            } else {
+                render(state.liked); 
+            }
         }
 
         document.querySelectorAll('.cat-item').forEach(p => p.onclick = () => {
@@ -366,6 +415,23 @@
             load(p.innerText);
         });
         ui.search.onkeypress = (e) => e.key === 'Enter' && load(ui.search.value);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.target.tagName === 'INPUT') return;
+            if (e.code === 'Space') { e.preventDefault(); ui.playBtn.click(); }
+            if (e.key === 'ArrowRight' && e.ctrlKey) { e.preventDefault(); next(); }
+            if (e.key === 'ArrowLeft' && e.ctrlKey) { 
+                e.preventDefault(); 
+                if (ui.audio.currentTime > 3) ui.audio.currentTime = 0;
+            }
+            if (e.key === 'ArrowUp') { e.preventDefault(); ui.audio.volume = Math.min(1, ui.audio.volume + 0.1); toast('Volume: ' + Math.round(ui.audio.volume * 100) + '%'); }
+            if (e.key === 'ArrowDown') { e.preventDefault(); ui.audio.volume = Math.max(0, ui.audio.volume - 0.1); toast('Volume: ' + Math.round(ui.audio.volume * 100) + '%'); }
+            if (e.key === 'l' || e.key === 'L') { e.preventDefault(); ui.likeBtn.click(); }
+            if (e.key === 'f' || e.key === 'F') { 
+                e.preventDefault(); 
+                if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); 
+            }
+        });
 
         let vCtx, vAn, vSrc;
         function startVisualizer() {
